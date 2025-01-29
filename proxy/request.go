@@ -31,13 +31,11 @@ func ModifyRequest(proxy *httputil.ReverseProxy) {
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
-		logger.LogRequest(req) 
-
-		// Add custom headers
-		req.Header.Add("X-Custom-Header", "MyProxy")
-
 		// Rotate user-agent
 		req.Header.Set("User-Agent", getRandomUserAgent())
+		// Add custom headers
+		req.Header.Add("X-Custom-Header", "MyProxy")
+		logger.LogRequest(req)
 	}
 }
 
