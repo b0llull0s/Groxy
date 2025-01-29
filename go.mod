@@ -1,3 +1,3 @@
-module github.com/b0llull0s/groxy-mods
+module Groxy
 
 go 1.23.5

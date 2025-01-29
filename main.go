@@ -5,32 +5,25 @@ import (
     "log"
     "net/http"
     "net/url"
-    "os"
 
+    "Groxy/logger"   
+    "Groxy/proxy" 
 )
 
 var (
-    logFile      *os.File
     targetURLStr string
     transparent  bool
 )
 
-func init() {
-    var err error
-    logFile, err = os.OpenFile("proxy.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-    if err != nil {
-        log.Fatalf("Failed to open log file: %v", err)
-    }
-    log.SetOutput(logFile)
-}
-
 func main() {
-    defer logFile.Close()
-
     // Parse command-line flags
     flag.StringVar(&targetURLStr, "t", "", "Target URL for target-specific mode (e.g., http://10.10.10.80)")
     flag.BoolVar(&transparent, "transparent", false, "Run in transparent mode")
     flag.Parse()
+
+    // Initialize logging
+    logger.Init()
+    defer logger.LogFile.Close()
 
     // Validate flags
     if targetURLStr == "" && !transparent {
@@ -44,7 +37,7 @@ func main() {
     if transparent {
         // Transparent mode
         log.Println("Starting transparent proxy server on :8080")
-        http.HandleFunc("/", transparentProxyHandler)
+        http.HandleFunc("/", proxy.TransparentProxyHandler)
     } else {
         // Target-specific mode
         targetURL, err := url.Parse(targetURLStr)
@@ -52,7 +45,7 @@ func main() {
             log.Fatalf("Failed to parse target URL: %v", err)
         }
         log.Printf("Starting target-specific proxy server on :8080 for target: %s", targetURLStr)
-        http.HandleFunc("/", targetSpecificProxyHandler(targetURL))
+        http.HandleFunc("/", proxy.TargetSpecificProxyHandler(targetURL))
     }
 
     // Start HTTP proxy
