@@ -4,8 +4,10 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httputil"
+	"strings" 
 	"time"
 	"Groxy/logger"
+	"log" 
 )
 
 var (
@@ -26,15 +28,28 @@ var (
 	}
 )
 
-// Modifies outgoing requests.
-func ModifyRequest(proxy *httputil.ReverseProxy) {
+// ModifyRequest modifies outgoing requests.
+func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
+
 		// Rotate user-agent
 		req.Header.Set("User-Agent", getRandomUserAgent())
-		// Add custom headers
-		req.Header.Add("X-Custom-Header", "MyProxy")
+
+		// Add custom header if provided
+		if customHeader != "" {
+			parts := strings.SplitN(customHeader, ":", 2)
+			if len(parts) == 2 {
+				headerName := strings.TrimSpace(parts[0])
+				headerValue := strings.TrimSpace(parts[1])
+				req.Header.Add(headerName, headerValue)
+			} else {
+				log.Printf("Invalid custom header format: %s\n", customHeader) // Use log instead of logger.Log
+			}
+		}
+
+		// Log the request (after modifying headers)
 		logger.LogRequest(req)
 	}
 }

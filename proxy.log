@@ -1,0 +1,195 @@
+2025/01/30 18:01:13 Starting transparent proxy server on :8080
+2025/01/30 18:01:19 Request: GET http://example.com/
+2025/01/30 18:01:19 Header: User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+2025/01/30 18:01:19 Header: Accept: */*
+2025/01/30 18:01:19 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:01:19 Header: X-Custom-Header: MyProxy
+2025/01/30 18:01:20 Response: 200 OK
+2025/01/30 18:01:20 Header: Accept-Ranges: bytes
+2025/01/30 18:01:20 Header: Vary: Accept-Encoding
+2025/01/30 18:01:20 Header: Cache-Control: max-age=3424
+2025/01/30 18:01:20 Header: Date: Thu, 30 Jan 2025 17:01:20 GMT
+2025/01/30 18:01:20 Header: Content-Type: text/html
+2025/01/30 18:01:20 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:01:20 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:01:22 Request: GET http://example.com/
+2025/01/30 18:01:22 Header: User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15
+2025/01/30 18:01:22 Header: Accept: */*
+2025/01/30 18:01:22 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:01:22 Header: X-Custom-Header: MyProxy
+2025/01/30 18:01:23 Response: 200 OK
+2025/01/30 18:01:23 Header: Accept-Ranges: bytes
+2025/01/30 18:01:23 Header: Content-Type: text/html
+2025/01/30 18:01:23 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:01:23 Header: Vary: Accept-Encoding
+2025/01/30 18:01:23 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:01:23 Header: Cache-Control: max-age=3422
+2025/01/30 18:01:23 Header: Date: Thu, 30 Jan 2025 17:01:22 GMT
+2025/01/30 18:01:23 Request: GET http://example.com/
+2025/01/30 18:01:23 Header: User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15
+2025/01/30 18:01:23 Header: Accept: */*
+2025/01/30 18:01:23 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:01:23 Header: X-Custom-Header: MyProxy
+2025/01/30 18:01:24 Response: 200 OK
+2025/01/30 18:01:24 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:01:24 Header: Cache-Control: max-age=3420
+2025/01/30 18:01:24 Header: Accept-Ranges: bytes
+2025/01/30 18:01:24 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:01:24 Header: Date: Thu, 30 Jan 2025 17:01:24 GMT
+2025/01/30 18:01:24 Header: Content-Type: text/html
+2025/01/30 18:01:24 Header: Vary: Accept-Encoding
+2025/01/30 18:01:24 Request: GET http://example.com/
+2025/01/30 18:01:24 Header: User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:124.0) Gecko/20100101 Firefox/124.0
+2025/01/30 18:01:24 Header: Accept: */*
+2025/01/30 18:01:24 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:01:24 Header: X-Custom-Header: MyProxy
+2025/01/30 18:01:25 Response: 200 OK
+2025/01/30 18:01:25 Header: Content-Type: text/html
+2025/01/30 18:01:25 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:01:25 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:01:25 Header: Cache-Control: max-age=3419
+2025/01/30 18:01:25 Header: Accept-Ranges: bytes
+2025/01/30 18:01:25 Header: Vary: Accept-Encoding
+2025/01/30 18:01:25 Header: Date: Thu, 30 Jan 2025 17:01:25 GMT
+2025/01/30 18:01:25 Request: GET http://example.com/
+2025/01/30 18:01:25 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:01:25 Header: X-Custom-Header: MyProxy
+2025/01/30 18:01:25 Header: User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:124.0) Gecko/20100101 Firefox/124.0
+2025/01/30 18:01:25 Header: Accept: */*
+2025/01/30 18:01:26 Response: 200 OK
+2025/01/30 18:01:26 Header: Cache-Control: max-age=3419
+2025/01/30 18:01:26 Header: Date: Thu, 30 Jan 2025 17:01:25 GMT
+2025/01/30 18:01:26 Header: Accept-Ranges: bytes
+2025/01/30 18:01:26 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:01:26 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:01:26 Header: Content-Type: text/html
+2025/01/30 18:01:26 Header: Vary: Accept-Encoding
+2025/01/30 18:06:53 Starting transparent proxy server on :8080
+2025/01/30 18:06:57 Request: GET http://example.com/
+2025/01/30 18:06:57 Header: User-Agent: Mozilla/5.0 (X11; Linux i686; rv:124.0) Gecko/20100101 Firefox/124.0
+2025/01/30 18:06:57 Header: Accept: */*
+2025/01/30 18:06:57 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:06:57 Header: X-Custom-Header: MyProxy
+2025/01/30 18:06:58 Response: 200 OK
+2025/01/30 18:06:58 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:06:58 Header: Vary: Accept-Encoding
+2025/01/30 18:06:58 Header: Accept-Ranges: bytes
+2025/01/30 18:06:58 Header: Content-Type: text/html
+2025/01/30 18:06:58 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:06:58 Header: Cache-Control: max-age=3021
+2025/01/30 18:06:58 Header: Date: Thu, 30 Jan 2025 17:06:57 GMT
+2025/01/30 18:06:59 Request: GET http://example.com/
+2025/01/30 18:06:59 Header: User-Agent: Mozilla/5.0 (X11; Linux i686; rv:124.0) Gecko/20100101 Firefox/124.0
+2025/01/30 18:06:59 Header: Accept: */*
+2025/01/30 18:06:59 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:06:59 Header: X-Custom-Header: MyProxy
+2025/01/30 18:06:59 Response: 200 OK
+2025/01/30 18:06:59 Header: Accept-Ranges: bytes
+2025/01/30 18:06:59 Header: Content-Type: text/html
+2025/01/30 18:06:59 Header: Vary: Accept-Encoding
+2025/01/30 18:06:59 Header: Cache-Control: max-age=3019
+2025/01/30 18:06:59 Header: Date: Thu, 30 Jan 2025 17:06:59 GMT
+2025/01/30 18:06:59 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:06:59 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:07:00 Request: GET http://example.com/
+2025/01/30 18:07:00 Header: User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 OPR/109.0.0.0
+2025/01/30 18:07:00 Header: Accept: */*
+2025/01/30 18:07:00 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:07:00 Header: X-Custom-Header: MyProxy
+2025/01/30 18:07:00 Response: 200 OK
+2025/01/30 18:07:00 Header: Accept-Ranges: bytes
+2025/01/30 18:07:00 Header: Content-Type: text/html
+2025/01/30 18:07:00 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:07:00 Header: Vary: Accept-Encoding
+2025/01/30 18:07:00 Header: Cache-Control: max-age=3018
+2025/01/30 18:07:00 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:07:00 Header: Date: Thu, 30 Jan 2025 17:07:00 GMT
+2025/01/30 18:07:01 Request: GET http://example.com/
+2025/01/30 18:07:01 Header: User-Agent: Mozilla/5.0 (X11; Linux i686; rv:124.0) Gecko/20100101 Firefox/124.0
+2025/01/30 18:07:01 Header: Accept: */*
+2025/01/30 18:07:01 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:07:01 Header: X-Custom-Header: MyProxy
+2025/01/30 18:07:01 Response: 200 OK
+2025/01/30 18:07:01 Header: Content-Type: text/html
+2025/01/30 18:07:01 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:07:01 Header: Vary: Accept-Encoding
+2025/01/30 18:07:01 Header: Cache-Control: max-age=3017
+2025/01/30 18:07:01 Header: Date: Thu, 30 Jan 2025 17:07:01 GMT
+2025/01/30 18:07:01 Header: Accept-Ranges: bytes
+2025/01/30 18:07:01 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:07:01 Request: GET http://example.com/
+2025/01/30 18:07:01 Header: Accept: */*
+2025/01/30 18:07:01 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:07:01 Header: X-Custom-Header: MyProxy
+2025/01/30 18:07:01 Header: User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0
+2025/01/30 18:07:02 Response: 200 OK
+2025/01/30 18:07:02 Header: Vary: Accept-Encoding
+2025/01/30 18:07:02 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:07:02 Header: Cache-Control: max-age=3016
+2025/01/30 18:07:02 Header: Date: Thu, 30 Jan 2025 17:07:02 GMT
+2025/01/30 18:07:02 Header: Accept-Ranges: bytes
+2025/01/30 18:07:02 Header: Content-Type: text/html
+2025/01/30 18:07:02 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:17:00 Starting transparent proxy server on :8080
+2025/01/30 18:17:24 Request: GET http://example.com/
+2025/01/30 18:17:24 Header: User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0
+2025/01/30 18:17:24 Header: Accept: */*
+2025/01/30 18:17:24 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:17:25 Response: 200 OK
+2025/01/30 18:17:25 Header: Accept-Ranges: bytes
+2025/01/30 18:17:25 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:17:25 Header: Cache-Control: max-age=2393
+2025/01/30 18:17:25 Header: Date: Thu, 30 Jan 2025 17:17:25 GMT
+2025/01/30 18:17:25 Header: Content-Type: text/html
+2025/01/30 18:17:25 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:17:25 Header: Vary: Accept-Encoding
+2025/01/30 18:17:26 Request: GET http://example.com/
+2025/01/30 18:17:26 Header: Accept: */*
+2025/01/30 18:17:26 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:17:26 Header: User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:124.0) Gecko/20100101 Firefox/124.0
+2025/01/30 18:17:26 Response: 200 OK
+2025/01/30 18:17:26 Header: Content-Type: text/html
+2025/01/30 18:17:26 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:17:26 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:17:26 Header: Vary: Accept-Encoding
+2025/01/30 18:17:26 Header: Cache-Control: max-age=2392
+2025/01/30 18:17:26 Header: Accept-Ranges: bytes
+2025/01/30 18:17:26 Header: Date: Thu, 30 Jan 2025 17:17:26 GMT
+2025/01/30 18:17:27 Request: GET http://example.com/
+2025/01/30 18:17:27 Header: User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 14.4; rv:124.0) Gecko/20100101 Firefox/124.0
+2025/01/30 18:17:27 Header: Accept: */*
+2025/01/30 18:17:27 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:17:27 Response: 200 OK
+2025/01/30 18:17:27 Header: Date: Thu, 30 Jan 2025 17:17:27 GMT
+2025/01/30 18:17:27 Header: Accept-Ranges: bytes
+2025/01/30 18:17:27 Header: Content-Type: text/html
+2025/01/30 18:17:27 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:17:27 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:17:27 Header: Vary: Accept-Encoding
+2025/01/30 18:17:27 Header: Cache-Control: max-age=2391
+2025/01/30 18:17:28 Request: GET http://example.com/
+2025/01/30 18:17:28 Header: Accept: */*
+2025/01/30 18:17:28 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:17:28 Header: User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+2025/01/30 18:17:28 Response: 200 OK
+2025/01/30 18:17:28 Header: Cache-Control: max-age=2390
+2025/01/30 18:17:28 Header: Date: Thu, 30 Jan 2025 17:17:28 GMT
+2025/01/30 18:17:28 Header: Accept-Ranges: bytes
+2025/01/30 18:17:28 Header: Content-Type: text/html
+2025/01/30 18:17:28 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:17:28 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
+2025/01/30 18:17:28 Header: Vary: Accept-Encoding
+2025/01/30 18:19:30 Starting transparent proxy server on :8080
+2025/01/30 18:19:36 Request: GET http://example.com/
+2025/01/30 18:19:36 Header: User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+2025/01/30 18:19:36 Header: Accept: */*
+2025/01/30 18:19:36 Header: Proxy-Connection: Keep-Alive
+2025/01/30 18:19:36 Header: X-Request-Id: 12345
+2025/01/30 18:19:37 Response: 200 OK
+2025/01/30 18:19:37 Header: Date: Thu, 30 Jan 2025 17:19:37 GMT
+2025/01/30 18:19:37 Header: Accept-Ranges: bytes
+2025/01/30 18:19:37 Header: Content-Type: text/html
+2025/01/30 18:19:37 Header: Vary: Accept-Encoding
+2025/01/30 18:19:37 Header: Cache-Control: max-age=1516
+2025/01/30 18:19:37 Header: Etag: "84238dfc8092e5d9c0dac8ef93371a07:1736799080.121134"
+2025/01/30 18:19:37 Header: Last-Modified: Mon, 13 Jan 2025 20:11:20 GMT
