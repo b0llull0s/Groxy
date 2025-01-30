@@ -62,7 +62,7 @@ func main() {
 	}()
 
 	// Start HTTPS server
-	tlsConfig, err := proxy.CreateTLSConfig("cert.pem", "key.pem")
+	tlsConfig, err := proxy.CreateTLSConfig("./server-cert.pem", "./server-key.pem")
 	if err != nil {
 		log.Fatalf("Failed to create TLS config: %v", err)
 	}
