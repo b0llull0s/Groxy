@@ -13,7 +13,7 @@ import (
 var (
 	targetURLStr  string
 	transparent   bool
-	customHeader  string
+	customHeader  string 
 )
 
 func main() {
@@ -38,9 +38,9 @@ func main() {
 	// Start the proxy in the appropriate mode
 	if transparent {
 		// Transparent mode
-		log.Println("Starting transparent proxy server on :8080")
+		log.Println("Starting transparent proxy server on :8080 (HTTP) and :8443 (HTTPS)")
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			proxy.TransparentProxyHandler(w, r, customHeader) 
+			proxy.TransparentProxyHandler(w, r, customHeader) // Pass custom header
 		})
 	} else {
 		// Target-specific mode
@@ -48,14 +48,26 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to parse target URL: %v", err)
 		}
-		log.Printf("Starting target-specific proxy server on :8080 for target: %s", targetURLStr)
+		log.Printf("Starting target-specific proxy server on :8080 (HTTP) and :8443 (HTTPS) for target: %s", targetURLStr)
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			proxy.TargetSpecificProxyHandler(targetURL, w, r, customHeader) 
+			proxy.TargetSpecificProxyHandler(targetURL, w, r, customHeader) // Pass custom header
 		})
 	}
 
-	// Start HTTP proxy
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatalf("Failed to start HTTP proxy server: %v", err)
+	// Start HTTP server
+	go func() {
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			log.Fatalf("Failed to start HTTP proxy server: %v", err)
+		}
+	}()
+
+	// Start HTTPS server
+	tlsConfig, err := proxy.CreateTLSConfig("cert.pem", "key.pem")
+	if err != nil {
+		log.Fatalf("Failed to create TLS config: %v", err)
 	}
+	go proxy.StartHTTPSServer(":8443", nil, tlsConfig)
+
+	// Keep the program running
+	select {}
 }
