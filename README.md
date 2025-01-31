@@ -1,5 +1,5 @@
 # Groxy
-- Groxy is a modular proxy written in Go, designed to be integrated with a `C2` server in the future.
+- Groxy is a modular proxy written in `Go`, designed to be integrated with a `C2` server in the future.
 ## Features
 
 - `Transparent` Mode: Operate in a mode that intercepts all the traffic.
@@ -12,11 +12,11 @@
 ## Planned Features
 
 - `TLS` Encryption: Enhance security with TLS encryption.
-- Certificate rotation: Periodically replacing SSL/TLS certificates with new ones to ensure the ongoing security of the connection.
+- `Certificate rotation`: Periodically replacing SSL/TLS certificates with new ones to ensure the ongoing security of the connection.
 - `Authorization`: Controls who can access the proxy and what actions they can perform.
 - `Polyglot` Features: Add support for `C++` and multiple protocols.
 - `Rate Limiting Middleware`: Implement rate limiting to control traffic flow.
-- Add validation for incoming and outgoing requests.
+- `Validation` for incoming and outgoing requests.
 
 ## Certificates
 - The certificates provided in the repository are for testing purposes.
