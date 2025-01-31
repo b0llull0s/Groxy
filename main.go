@@ -68,7 +68,7 @@ func main() {
 		// Start HTTPS server if enabled
 		if enableServer {
 			log.Println("Starting HTTPS server on :8443")
-			go servers.StartHTTPSServer(":8443", "certs/proxy-cert.pem", "certs/proxy-key.pem")
+			go servers.StartHTTPSServer(":8443", "certs/server-cert.pem", "certs/server-key.pem")
 		}
 
 	// Keep the program running
