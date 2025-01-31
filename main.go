@@ -6,21 +6,24 @@ import (
 	"net/http"
 	"net/url"
 
-	"Groxy/logger"   
-	"Groxy/proxy"    
+	"Groxy/logger"
+	"Groxy/proxy"
+	"Groxy/servers" 
 )
 
 var (
 	targetURLStr  string
 	transparent   bool
-	customHeader  string 
+	customHeader  string
+	enableServer   bool 
 )
 
 func main() {
 	// Parse command-line flags
 	flag.StringVar(&targetURLStr, "t", "", "Target URL for target-specific mode (e.g., http://10.10.10.80)")
 	flag.BoolVar(&transparent, "transparent", false, "Run in transparent mode")
-	flag.StringVar(&customHeader, "H", "", "Add a custom header (e.g., \"X-Request-ID: 12345\")") // New flag
+	flag.StringVar(&customHeader, "H", "", "Add a custom header (e.g., \"X-Request-ID: 12345\")")
+	flag.BoolVar(&enableServer, "server", false, "Enable the HTTPS server") 
 	flag.Parse()
 
 	// Initialize logging
@@ -38,9 +41,9 @@ func main() {
 	// Start the proxy in the appropriate mode
 	if transparent {
 		// Transparent mode
-		log.Println("Starting transparent proxy server on :8080 (HTTP) and :8443 (HTTPS)")
+
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			proxy.TransparentProxyHandler(w, r, customHeader) // Pass custom header
+			proxy.TransparentProxyHandler(w, r, customHeader)
 		})
 	} else {
 		// Target-specific mode
@@ -48,19 +51,27 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to parse target URL: %v", err)
 		}
-		log.Printf("Starting target-specific proxy server on :8080 (HTTP) and :8443 (HTTPS) for target: %s", targetURLStr)
+
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			proxy.TargetSpecificProxyHandler(targetURL, w, r, customHeader) // Pass custom header
+			proxy.TargetSpecificProxyHandler(targetURL, w, r, customHeader)
 		})
 	}
 
 	// Start HTTP server
 	go func() {
+		log.Println("Starting HTTP server on :8080")
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			log.Fatalf("Failed to start HTTP proxy server: %v", err)
 		}
 	}()
 
+		// Start HTTPS server if enabled
+		if enableServer {
+			log.Println("Starting HTTPS server on :8443")
+			go servers.StartHTTPSServer(":8443", "certs/proxy-cert.pem", "certs/proxy-key.pem")
+		}
+
 	// Keep the program running
+	log.Println("Proxy server is running")
 	select {}
 }
