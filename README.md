@@ -2,10 +2,10 @@
 - Groxy is a modular proxy written in `Go`, designed to be integrated with a `C2` server in the future.
 ## Features
 
-- `Transparent` Mode: Operate in a mode that intercepts all the traffic.
-- `Target` Mode: Intercepts traffic for a specific target.
+- `Transparent Mode`: Operate in a mode that intercepts all the traffic.
+- `Target Mode`: Intercepts traffic for a specific target.
 - `Custom Headers`: Add custom headers to requests with the `-H` flag.
-- `User-Agent` Rotation: Rotate `User-Agent` strings to mimic different browsers or devices.
+- `User-Agent Rotation`: Rotate `User-Agent` strings to mimic different browsers or devices.
 - `HTTPS Server`: Deploy an HTTPS server.
 - `Logging`: Detailed logging of proxy activity.
 
