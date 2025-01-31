@@ -6,7 +6,7 @@
 - `Target` Mode: Intercepts traffic for a specific target.
 - `Custom Headers`: Add custom headers to requests with the `-H` flag.
 - `User-Agent` Rotation: Rotate `User-Agent` strings to mimic different browsers or devices.
-- `HTTPS` Server: Deploy an HTTPS server.
+- `HTTPS Server`: Deploy an HTTPS server.
 - `Logging`: Detailed logging of proxy activity.
 
 ## Planned Features
