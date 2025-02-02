@@ -8,14 +8,15 @@ import (
 
 	"Groxy/logger"
 	"Groxy/proxy"
-	"Groxy/servers" 
+	"Groxy/servers"
 )
 
 var (
 	targetURLStr  string
 	transparent   bool
 	customHeader  string
-	enableServer   bool 
+	enableHTTP    bool
+	enableHTTPS   bool
 )
 
 func main() {
@@ -23,7 +24,8 @@ func main() {
 	flag.StringVar(&targetURLStr, "t", "", "Target URL for target-specific mode (e.g., http://10.10.10.80)")
 	flag.BoolVar(&transparent, "transparent", false, "Run in transparent mode")
 	flag.StringVar(&customHeader, "H", "", "Add a custom header (e.g., \"X-Request-ID: 12345\")")
-	flag.BoolVar(&enableServer, "server", false, "Enable the HTTPS server") 
+	flag.BoolVar(&enableHTTP, "http", true, "Enable the HTTP server")
+	flag.BoolVar(&enableHTTPS, "https", true, "Enable the HTTPS server")
 	flag.Parse()
 
 	// Initialize logging
@@ -38,11 +40,11 @@ func main() {
 		log.Fatalf("You cannot specify both -t <target> and --transparent")
 	}
 
-	// Start the proxy in the appropriate mode
+	// Create the proxy handler
+	var proxyHandler http.Handler
 	if transparent {
 		// Transparent mode
-
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		proxyHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			proxy.TransparentProxyHandler(w, r, customHeader)
 		})
 	} else {
@@ -52,24 +54,37 @@ func main() {
 			log.Fatalf("Failed to parse target URL: %v", err)
 		}
 
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		proxyHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			proxy.TargetSpecificProxyHandler(targetURL, w, r, customHeader)
 		})
 	}
 
-	// Start HTTP server
-	go func() {
-		log.Println("Starting HTTP server on :8080")
-		if err := http.ListenAndServe(":8080", nil); err != nil {
-			log.Fatalf("Failed to start HTTP proxy server: %v", err)
-		}
-	}()
+	// Register the handler for the root path "/"
+	http.Handle("/", proxyHandler)
 
-		// Start HTTPS server if enabled
-		if enableServer {
+	// Start HTTP server if enabled
+	if enableHTTP {
+		go func() {
+			log.Println("Starting HTTP server on :8080")
+			if err := http.ListenAndServe(":8080", nil); err != nil {
+				log.Fatalf("Failed to start HTTP server: %v", err)
+			}
+		}()
+	}
+
+	// Load certificates for HTTPS server
+	certFile := "certs/server-cert.pem"
+	keyFile := "certs/server-key.pem"
+
+	// Start HTTPS server if enabled
+	if enableHTTPS {
+		go func() {
 			log.Println("Starting HTTPS server on :8443")
-			go servers.StartHTTPSServer(":8443", "certs/server-cert.pem", "certs/server-key.pem")
-		}
+			if err := servers.StartHTTPSServer(":8443", certFile, keyFile, proxyHandler); err != nil {
+				log.Fatalf("Failed to start HTTPS server: %v", err)
+			}
+		}()
+	}
 
 	// Keep the program running
 	log.Println("Proxy server is running")

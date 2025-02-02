@@ -2,35 +2,34 @@ package servers
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
 )
 
-// StartMinimalHTTPSServer starts a minimal HTTPS server on the given address.
-func StartHTTPSServer(addr, certFile, keyFile string) {
+// StartHTTPSServer starts a HTTPS server on the given address.
+func StartHTTPSServer(addr, certFile, keyFile string, handler http.Handler) error {
 	// Load server certificate and key
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		log.Fatalf("Failed to load server certificate: %v", err)
+			return fmt.Errorf("Failed to load server certificate: %v", err)
 	}
 
-	// Create TLS config
-	config := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		MinVersion:   tls.VersionTLS12, // Enforce TLS 1.2 or higher
-	}
-
-	// Create HTTP server with logging middleware
+	// Configure the TLS server
 	server := &http.Server{
-		Addr:      addr,
-		Handler:   http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Printf("Request: %s %s", r.Method, r.URL.Path)
-			w.Write([]byte("Hello from the HTTPS server!"))
-		}),
-		TLSConfig: config,
+		Addr:    addr,
+		Handler: handler,
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{cert},
+		},
 	}
 
-	if err := server.ListenAndServeTLS(certFile, keyFile); err != nil {
-		log.Fatalf("Failed to start HTTPS server: %v", err)
+	// Start the HTTPS server
+	log.Printf("Starting HTTPS server on %s\n", addr)
+	if err := server.ListenAndServeTLS("", ""); err != nil {
+		return fmt.Errorf("failed to start HTTPS server: %v", err)
 	}
+
+	// Return nil to indicate success
+	return nil
 }
