@@ -25,7 +25,7 @@ func StartHTTPSServer(addr, certFile, keyFile string, handler http.Handler) erro
 	}
 
 	// Start the HTTPS server
-	log.Printf("Starting HTTPS server on %s\n", addr)
+	log.Printf("Starting HTTPS server%s\n", addr)
 	if err := server.ListenAndServeTLS("", ""); err != nil {
 		return fmt.Errorf("failed to start HTTPS server: %v", err)
 	}

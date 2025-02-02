@@ -65,7 +65,7 @@ func main() {
 	// Start HTTP server if enabled
 	if enableHTTP {
 		go func() {
-			log.Println("Starting HTTP server on :8080")
+			log.Println("Starting HTTP server:8080")
 			if err := http.ListenAndServe(":8080", nil); err != nil {
 				log.Fatalf("Failed to start HTTP server: %v", err)
 			}
