@@ -7,8 +7,10 @@ import (
 
 // Starts an HTTP server on the given address.
 func StartHTTPServer(addr string, proxyHandler http.Handler) {
-	log.Printf("Starting HTTP server on %s", addr)
-	if err := http.ListenAndServe(addr, proxyHandler); err != nil {
-		log.Fatalf("Failed to start HTTP proxy server: %v", err)
-	}
+    go func() {
+        if err := http.ListenAndServe(addr, proxyHandler); err != nil {
+            log.Fatalf("Failed to start HTTP proxy server: %v", err)
+        }
+    }()
 }
+

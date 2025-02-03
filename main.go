@@ -24,8 +24,8 @@ func main() {
 	flag.StringVar(&targetURLStr, "t", "", "Target URL for target-specific mode (e.g., http://10.10.10.80)")
 	flag.BoolVar(&transparent, "transparent", false, "Run in transparent mode")
 	flag.StringVar(&customHeader, "H", "", "Add a custom header (e.g., \"X-Request-ID: 12345\")")
-	flag.BoolVar(&enableHTTP, "http", true, "Enable the HTTP server")
-	flag.BoolVar(&enableHTTPS, "https", true, "Enable the HTTPS server")
+	flag.BoolVar(&enableHTTP, "http", false, "Enable the HTTP server")
+	flag.BoolVar(&enableHTTPS, "https", false, "Enable the HTTPS server")
 	flag.Parse()
 
 	// Initialize logging
@@ -65,7 +65,7 @@ func main() {
 	// Start HTTP server if enabled
 	if enableHTTP {
 		go func() {
-			log.Println("Starting HTTP server:8080")
+			log.Println("Starting HTTP server on :8080")
 			if err := http.ListenAndServe(":8080", nil); err != nil {
 				log.Fatalf("Failed to start HTTP server: %v", err)
 			}
