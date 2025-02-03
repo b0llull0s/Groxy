@@ -1,18 +1,20 @@
 package servers
 
 import (
+	"Groxy/logger"
 	"crypto/tls"
-	"fmt"
-	"log"
 	"net/http"
 )
 
-// StartHTTPSServer starts a HTTPS server on the given address.
+// Starts an HTTPS server
 func StartHTTPSServer(addr, certFile, keyFile string, handler http.Handler) error {
+	logger.LogHTTPSServerStart(addr)
+
 	// Load server certificate and key
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-			return fmt.Errorf("Failed to load server certificate: %v", err)
+		logger.LogCertificateError(err)
+		return nil 
 	}
 
 	// Configure the TLS server
@@ -25,11 +27,13 @@ func StartHTTPSServer(addr, certFile, keyFile string, handler http.Handler) erro
 	}
 
 	// Start the HTTPS server
-	log.Printf("Starting HTTPS server%s\n", addr)
 	if err := server.ListenAndServeTLS("", ""); err != nil {
-		return fmt.Errorf("failed to start HTTPS server: %v", err)
+
+		logger.LogServerError(err)
+		return nil 
 	}
 
-	// Return nil to indicate success
 	return nil
 }
+
+

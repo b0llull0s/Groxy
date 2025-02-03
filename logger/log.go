@@ -36,3 +36,19 @@ func LogResponse(res *http.Response) {
 		}
 	}
 }
+
+func LogHTTPServerStart(addr string) {
+	log.Printf("Starting HTTP server on %s", addr)
+}
+
+func LogHTTPSServerStart(addr string) {
+	log.Printf("Starting HTTPS server on %s", addr)
+}
+
+func LogServerError(err error) {
+	log.Fatalf("Server error: %v", err)
+}
+
+func LogCertificateError(err error) {
+	log.Printf("Certificate error: %v", err)
+}

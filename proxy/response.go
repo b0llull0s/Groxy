@@ -12,7 +12,7 @@ import (
 // Modifies incoming responses.
 func ModifyResponse(proxy *httputil.ReverseProxy) {
 	proxy.ModifyResponse = func(res *http.Response) error {
-		logger.LogResponse(res) // Log the response
+		logger.LogResponse(res)
 
 		// Modify the response body
 		body, err := io.ReadAll(res.Body)

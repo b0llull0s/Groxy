@@ -65,9 +65,9 @@ func main() {
 	// Start HTTP server if enabled
 	if enableHTTP {
 		go func() {
-			log.Println("Starting HTTP server on :8080")
+			logger.LogHTTPServerStart(":8080")
 			if err := http.ListenAndServe(":8080", nil); err != nil {
-				log.Fatalf("Failed to start HTTP server: %v", err)
+				logger.LogServerError(err)
 			}
 		}()
 	}
@@ -79,9 +79,9 @@ func main() {
 	// Start HTTPS server if enabled
 	if enableHTTPS {
 		go func() {
-			log.Println("Starting HTTPS server on :8443")
+			logger.LogHTTPSServerStart(":8443")
 			if err := servers.StartHTTPSServer(":8443", certFile, keyFile, proxyHandler); err != nil {
-				log.Fatalf("Failed to start HTTPS server: %v", err)
+				logger.LogServerError(err)
 			}
 		}()
 	}
