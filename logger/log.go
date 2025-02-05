@@ -37,12 +37,12 @@ func LogResponse(res *http.Response) {
 	}
 }
 
-func LogHTTPServerStart(addr string) {
-	log.Printf("Starting HTTP server on %s", addr)
+func LogHTTPServerStart(port string) {
+	log.Printf("Starting HTTP server on %s", port)
 }
 
-func LogHTTPSServerStart(addr string) {
-	log.Printf("Starting HTTPS server on %s", addr)
+func LogHTTPSServerStart(port string) {
+	log.Printf("Starting HTTPS server on %s", port)
 }
 
 func LogServerError(err error) {
@@ -52,3 +52,18 @@ func LogServerError(err error) {
 func LogCertificateError(err error) {
 	log.Printf("Certificate error: %v", err)
 }
+
+func LogTransparentProxyHandlerUnableToDetermineTargetHost(w http.ResponseWriter) {
+	log.Printf("TransparentProxyHandler Error: Unable to determine target host")
+	http.Error(w, "Unable to determine target host", http.StatusBadRequest)
+}
+
+func LogTransparentProxyHandlerFailedToParseTargetURL(w http.ResponseWriter, err error) {
+	log.Printf("TransparentProxyHandler Error: Failed to parse target URL - %v", err)
+	http.Error(w, "Failed to parse target URL", http.StatusInternalServerError)
+}
+
+func LogCustomHeaderError(customHeader string) {
+    log.Printf("Invalid custom header format: %s\n", customHeader)
+}
+

@@ -7,7 +7,6 @@ import (
 	"strings" 
 	"time"
 	"Groxy/logger"
-	"log" 
 )
 
 var (
@@ -37,7 +36,7 @@ func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
 		// Rotate user-agent
 		req.Header.Set("User-Agent", getRandomUserAgent())
 
-		// Add custom header if provided
+		// Add Custom Header
 		if customHeader != "" {
 			parts := strings.SplitN(customHeader, ":", 2)
 			if len(parts) == 2 {
@@ -45,11 +44,10 @@ func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
 				headerValue := strings.TrimSpace(parts[1])
 				req.Header.Add(headerName, headerValue)
 			} else {
-				log.Printf("Invalid custom header format: %s\n", customHeader) // Use log instead of logger.Log
+				logger.LogCustomHeaderError(customHeader)
 			}
 		}
 
-		// Log the request (after modifying headers)
 		logger.LogRequest(req)
 	}
 }

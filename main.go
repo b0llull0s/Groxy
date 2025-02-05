@@ -64,26 +64,16 @@ func main() {
 
 	// Start HTTP server if enabled
 	if enableHTTP {
-		go func() {
-			logger.LogHTTPServerStart(":8080")
-			if err := http.ListenAndServe(":8080", nil); err != nil {
-				logger.LogServerError(err)
-			}
-		}()
+		go servers.StartHTTPServer(proxyHandler)
 	}
 
 	// Load certificates for HTTPS server
 	certFile := "certs/server-cert.pem"
 	keyFile := "certs/server-key.pem"
 
-	// Start HTTPS server if enabled
+	// Start HTTPS server if enabled	
 	if enableHTTPS {
-		go func() {
-			logger.LogHTTPSServerStart(":8443")
-			if err := servers.StartHTTPSServer(":8443", certFile, keyFile, proxyHandler); err != nil {
-				logger.LogServerError(err)
-			}
-		}()
+		go servers.StartHTTPSServer(certFile, keyFile, proxyHandler)
 	}
 
 	// Keep the program running
