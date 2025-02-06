@@ -76,7 +76,5 @@ func main() {
 		go servers.StartHTTPSServer(certFile, keyFile, proxyHandler)
 	}
 
-	// Keep the program running
-	log.Println("Proxy server is running")
-	select {}
+	logger.KeepServerRunning()
 }

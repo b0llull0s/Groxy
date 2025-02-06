@@ -67,3 +67,7 @@ func LogCustomHeaderError(customHeader string) {
     log.Printf("Invalid custom header format: %s\n", customHeader)
 }
 
+func KeepServerRunning() {
+    log.Println("Proxy server is running")
+    select {}
+}
