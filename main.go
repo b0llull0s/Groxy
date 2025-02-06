@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net/http"
 	"net/url"
+	"fmt"
+	"os"
 
 	"Groxy/logger"
 	"Groxy/proxy"
@@ -34,10 +35,12 @@ func main() {
 
 	// Validate flags
 	if targetURLStr == "" && !transparent {
-		log.Fatalf("You must specify either -t <target> or --transparent")
+		fmt.Println("You must specify either -t <target> or --transparent")
+		os.Exit(1)
 	}
 	if targetURLStr != "" && transparent {
-		log.Fatalf("You cannot specify both -t <target> and --transparent")
+		fmt.Println("You cannot specify both -t <target> and --transparent")
+		os.Exit(1)
 	}
 
 	// Create the proxy handler
@@ -50,8 +53,9 @@ func main() {
 	} else {
 		// Target-specific mode
 		targetURL, err := url.Parse(targetURLStr)
-		if err != nil {
-			log.Fatalf("Failed to parse target URL: %v", err)
+		if err != nil || targetURL.Scheme == "" || targetURL.Host == "" {
+			fmt.Println("Failed to parse target URL: Invalid URL format")
+			os.Exit(1)
 		}
 
 		proxyHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
