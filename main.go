@@ -34,12 +34,21 @@ func main() {
 	defer logger.LogFile.Close()
 
 	// Validate flags
-	if targetURLStr == "" && !transparent {
-		fmt.Println("You must specify either -t <target> or --transparent")
+	if !transparent && targetURLStr == "" {
+		fmt.Println("Error: You must specify either -t <target> or --transparent")
+		flag.Usage()
 		os.Exit(1)
 	}
-	if targetURLStr != "" && transparent {
-		fmt.Println("You cannot specify both -t <target> and --transparent")
+
+	if transparent && targetURLStr != "" {
+		fmt.Println("Error: You cannot specify both -t <target> and --transparent")
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	if !enableHTTP && !enableHTTPS {
+		fmt.Println("Error: You must specify either -http or -https to enable the server")
+		flag.Usage()
 		os.Exit(1)
 	}
 
@@ -69,6 +78,7 @@ func main() {
 	// Start HTTP server if enabled
 	if enableHTTP {
 		go servers.StartHTTPServer(proxyHandler)
+		fmt.Println("HTTP server is running on port 8080")
 	}
 
 	// Load certificates for HTTPS server
@@ -78,6 +88,7 @@ func main() {
 	// Start HTTPS server if enabled	
 	if enableHTTPS {
 		go servers.StartHTTPSServer(certFile, keyFile, proxyHandler)
+		fmt.Println("HTTP server is running on port 8443")
 	}
 
 	logger.KeepServerRunning()
