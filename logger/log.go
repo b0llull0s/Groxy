@@ -53,7 +53,7 @@ func LogCertificateError(err error) {
 	log.Printf("Certificate error: %v", err)
 }
 
-func LogTransparentProxyHandlerUnableToDetermineTargetHost(w http.ResponseWriter) {
+func LogTransparentProxyHandlerUnableToDetermineDestinationHost(w http.ResponseWriter) {
 	log.Printf("TransparentProxyHandler Error: Unable to determine target host")
 	http.Error(w, "Unable to determine target host", http.StatusBadRequest)
 }

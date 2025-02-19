@@ -10,8 +10,8 @@ import (
 )
 
 // Creates a reverse proxy for the given target URL.
-func CreateProxy(targetURL *url.URL, customHeader string) *httputil.ReverseProxy {
-	proxy := httputil.NewSingleHostReverseProxy(targetURL)
+func CreateProxy(destinationURL *url.URL, customHeader string) *httputil.ReverseProxy {
+	proxy := httputil.NewSingleHostReverseProxy(destinationURL)
 	ModifyRequest(proxy, customHeader)
 	ModifyResponse(proxy)
 	return proxy
@@ -20,21 +20,26 @@ func CreateProxy(targetURL *url.URL, customHeader string) *httputil.ReverseProxy
 // Transparent Mode
 func TransparentProxyHandler(w http.ResponseWriter, r *http.Request, customHeader string) {
 	// Extract the target host from the request
-	targetHost := r.Host
-	if targetHost == "" {
-		logger.LogTransparentProxyHandlerUnableToDetermineTargetHost(w)
+	destinationHost := r.Host
+	if destinationHost == "" {
+		logger.LogTransparentProxyHandlerUnableToDetermineDestinationHost(w)
 		return
 	}
 
-	// Construct the target URL
-	targetURL, err := url.Parse("http://" + targetHost + r.URL.Path)
-	if err != nil {
-		logger.LogTransparentProxyHandlerFailedToParseTargetURL(w, err)
-		return
+	// Construct the target URL using the request's Host header
+	destinationURL := &url.URL{
+		Scheme: "http",
+		Host:   destinationHost,
+		Path:   r.URL.Path,
+	}
+
+	// If the request is HTTPS, update the scheme
+	if r.TLS != nil {
+		destinationURL.Scheme = "https"
 	}
 
 	// Create a reverse proxy
-	proxy := CreateProxy(targetURL, customHeader)
+	proxy := CreateProxy(destinationURL, customHeader)
 
 	// Set up TLS configuration for HTTPS targets
 	if r.URL.Scheme == "https" {
@@ -47,12 +52,12 @@ func TransparentProxyHandler(w http.ResponseWriter, r *http.Request, customHeade
 }
 
 // Target Mode
-func TargetSpecificProxyHandler(targetURL *url.URL, w http.ResponseWriter, r *http.Request, customHeader string) {
+func TargetSpecificProxyHandler(destinationURL *url.URL, w http.ResponseWriter, r *http.Request, customHeader string) {
 	// Create a reverse proxy
-	proxy := CreateProxy(targetURL, customHeader)
+	proxy := CreateProxy(destinationURL, customHeader)
 
 	// Set up TLS configuration for HTTPS targets
-	if targetURL.Scheme == "https" {
+	if destinationURL.Scheme == "https" {
 		proxy.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Skip cert verification for development
 		}
