@@ -10,6 +10,7 @@ import (
 	"Groxy/logger"
 	"Groxy/proxy"
 	"Groxy/servers"
+	"Groxy/tls"
 )
 
 var (
@@ -52,44 +53,43 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create the proxy handler
-	var proxyHandler http.Handler
-	if transparent {
-		// Transparent mode
-		proxyHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			proxy.TransparentProxyHandler(w, r, customHeader)
-		})
-	} else {
-		// Target-specific mode
-		targetURL, err := url.Parse(targetURLStr)
+	// Load TLS configuration
+	tlsConfig := tls.NewConfig("certs/server-cert.pem", "certs/server-key.pem")
+	serverTLSConfig, err := tlsConfig.LoadServerConfig()
+	if err != nil {
+		fmt.Printf("Failed to load TLS config: %v\n", err)
+		return
+	}
+
+	// Create proxy handler
+	var targetURL *url.URL
+	if !transparent {
+		targetURL, err = url.Parse(targetURLStr)
 		if err != nil || targetURL.Scheme == "" || targetURL.Host == "" {
 			fmt.Println("Failed to parse target URL: Invalid URL format")
 			os.Exit(1)
 		}
-
-		proxyHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			proxy.TargetSpecificProxyHandler(targetURL, w, r, customHeader)
-		})
 	}
 
-	// Register the handler for the root path "/"
-	http.Handle("/", proxyHandler)
+	proxy := proxy.NewProxy(targetURL, tlsConfig, customHeader)
 
-	// Start HTTP server if enabled
+	// Create server
+	server := servers.NewServer(
+		proxy.Handler(),
+		serverTLSConfig,
+		"8080",
+		"8443",
+	)
+
+	// Start servers based on flags
 	if enableHTTP {
-		go servers.StartHTTPServer(proxyHandler)
+		go server.StartHTTP()
 		fmt.Println("HTTP server is running on port 8080")
 	}
-
-	// Load certificates for HTTPS server
-	certFile := "certs/server-cert.pem"
-	keyFile := "certs/server-key.pem"
-
-	// Start HTTPS server if enabled	
 	if enableHTTPS {
-		go servers.StartHTTPSServer(certFile, keyFile, proxyHandler)
-		fmt.Println("HTTP server is running on port 8443")
+		go server.StartHTTPS()
+		fmt.Println("HTTPS server is running on port 8443")
 	}
 
 	logger.KeepServerRunning()
-}
+	}

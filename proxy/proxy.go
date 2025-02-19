@@ -1,7 +1,7 @@
 package proxy
 
 import (
-	"crypto/tls"
+	"Groxy/tls"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -9,12 +9,33 @@ import (
 
 )
 
-// Creates a reverse proxy for the given target URL.
-func CreateProxy(destinationURL *url.URL, customHeader string) *httputil.ReverseProxy {
-	proxy := httputil.NewSingleHostReverseProxy(destinationURL)
-	ModifyRequest(proxy, customHeader)
-	ModifyResponse(proxy)
-	return proxy
+type Proxy struct {
+    targetURL    *url.URL
+    tlsConfig    *tls.Config
+    customHeader string
+}
+
+func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string) *Proxy {
+    return &Proxy{
+        targetURL:    targetURL,
+        tlsConfig:    tlsConfig,
+        customHeader: customHeader,
+    }
+}
+
+func (p *Proxy) Handler() http.Handler {
+    proxy := httputil.NewSingleHostReverseProxy(p.targetURL)
+    
+    // Set up transport with TLS config if needed
+    if p.targetURL.Scheme == "https" {
+        proxy.Transport = &http.Transport{
+            TLSClientConfig: p.tlsConfig.LoadClientConfig(),
+        }
+    }
+    
+    ModifyRequest(proxy, p.customHeader)
+    ModifyResponse(proxy)
+    return proxy
 }
 
 // Transparent Mode
