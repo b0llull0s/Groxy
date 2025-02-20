@@ -10,6 +10,7 @@ import (
 	"Groxy/proxy"
 	"Groxy/servers"
 	"Groxy/tls"
+	cryptotls "crypto/tls"
 )
 
 var (
@@ -54,15 +55,20 @@ func main() {
 
 	// Load TLS configuration
 	tlsConfig := tls.NewConfig("certs/server-cert.pem", "certs/server-key.pem")
-	serverTLSConfig, err := tlsConfig.LoadServerConfig()
-	if err != nil {
-		fmt.Printf("Failed to load TLS config: %v\n", err)
-		return
+	tlsManager := tls.NewManager(tlsConfig)
+
+	// Optional: Configure certificate rotation callbacks
+	tlsManager.OnRotation = func(cert *cryptotls.Certificate) {
+		fmt.Println("Certificate rotated successfully")
+	}
+	tlsManager.OnError = func(err error) {
+		fmt.Printf("Certificate rotation error: %v\n", err)
 	}
 
 	// Create proxy handler
 	var targetURL *url.URL
 	if !transparent {
+		var err error
 		targetURL, err = url.Parse(targetURLStr)
 		if err != nil || targetURL.Scheme == "" || targetURL.Host == "" {
 			fmt.Println("Failed to parse target URL: Invalid URL format")
@@ -75,7 +81,7 @@ func main() {
 	// Create server
 	server := servers.NewServer(
 		proxy.Handler(),
-		serverTLSConfig,
+		tlsManager,
 		"certs/server-cert.pem",
 		"certs/server-key.pem",
 		"8080",

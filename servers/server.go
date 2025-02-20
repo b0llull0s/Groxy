@@ -1,29 +1,31 @@
+// In servers/server.go
 package servers
 
 import (
     "net/http"
-    "crypto/tls"
     "fmt"
-//    "Groxy/tls"
+    "Groxy/tls"
+    "time"
+
 )
 
 type Server struct {
-    handler    http.Handler
-    tlsConfig  *tls.Config  
-    certFile   string
-    keyFile    string
-    httpPort   string
-    httpsPort  string
+    handler     http.Handler
+    tlsManager  *tls.Manager
+    certFile    string
+    keyFile     string
+    httpPort    string
+    httpsPort   string
 }
 
-func NewServer(handler http.Handler, tlsConfig *tls.Config, certFile, keyFile string, httpPort, httpsPort string) *Server {
+func NewServer(handler http.Handler, tlsManager *tls.Manager, certFile, keyFile string, httpPort, httpsPort string) *Server {
     return &Server{
-        handler:   handler,
-        tlsConfig: tlsConfig,
-        certFile:  certFile,
-        keyFile:   keyFile,
-        httpPort:  httpPort,
-        httpsPort: httpsPort,
+        handler:    handler,
+        tlsManager: tlsManager,
+        certFile:   certFile,
+        keyFile:    keyFile,
+        httpPort:   httpPort,
+        httpsPort:  httpsPort,
     }
 }
 
@@ -37,15 +39,19 @@ func (s *Server) StartHTTP() error {
 }
 
 func (s *Server) StartHTTPS() error {
-    if s.tlsConfig == nil {
-        return fmt.Errorf("TLS configuration is required for HTTPS")
+    tlsConfig, err := s.tlsManager.LoadServerConfig()
+    if err != nil {
+        return fmt.Errorf("failed to load TLS config: %v", err)
     }
+
+    // Start certificate rotation (e.g., every 30 days)
+    s.tlsManager.StartRotation(30 * 24 * time.Hour)
     
     addr := ":" + s.httpsPort
     server := &http.Server{
         Addr:      addr,
         Handler:   s.handler,
-        TLSConfig: s.tlsConfig,
+        TLSConfig: tlsConfig,
     }
     
     return server.ListenAndServeTLS(s.certFile, s.keyFile)
