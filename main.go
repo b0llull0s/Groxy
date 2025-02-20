@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"net/http"
 	"net/url"
 	"fmt"
 	"os"
@@ -77,6 +76,8 @@ func main() {
 	server := servers.NewServer(
 		proxy.Handler(),
 		serverTLSConfig,
+		"certs/server-cert.pem",
+		"certs/server-key.pem",
 		"8080",
 		"8443",
 	)
@@ -92,4 +93,4 @@ func main() {
 	}
 
 	logger.KeepServerRunning()
-	}
+}

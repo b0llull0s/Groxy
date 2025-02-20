@@ -2,21 +2,25 @@ package servers
 
 import (
     "net/http"
-    "Groxy/tls"
+    "crypto/tls"
     "fmt"
 )
 
 type Server struct {
     handler    http.Handler
-    tlsConfig  *tls.Config
+    tlsConfig  *tls.Config  
+    certFile   string
+    keyFile    string
     httpPort   string
     httpsPort  string
 }
 
-func NewServer(handler http.Handler, tlsConfig *tls.Config, httpPort, httpsPort string) *Server {
+func NewServer(handler http.Handler, tlsConfig *tls.Config, certFile, keyFile string, httpPort, httpsPort string) *Server {
     return &Server{
         handler:   handler,
         tlsConfig: tlsConfig,
+        certFile:  certFile,
+        keyFile:   keyFile,
         httpPort:  httpPort,
         httpsPort: httpsPort,
     }
@@ -43,5 +47,5 @@ func (s *Server) StartHTTPS() error {
         TLSConfig: s.tlsConfig,
     }
     
-    return server.ListenAndServeTLS(s.tlsConfig.CertFile, s.tlsConfig.KeyFile)
+    return server.ListenAndServeTLS(s.certFile, s.keyFile)
 }

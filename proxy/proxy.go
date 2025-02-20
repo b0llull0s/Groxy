@@ -1,12 +1,11 @@
 package proxy
 
 import (
-	"Groxy/tls"
-	"net/http"
-	"net/http/httputil"
-	"net/url"
-	"Groxy/logger"
-
+    "Groxy/tls"
+    "net/http"
+    "net/http/httputil"
+    "net/url"
+    "Groxy/logger"
 )
 
 type Proxy struct {
@@ -23,11 +22,18 @@ func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string) *P
     }
 }
 
+// CreateProxy is needed for backward compatibility with your handlers
+func CreateProxy(destinationURL *url.URL, customHeader string) *httputil.ReverseProxy {
+    proxy := httputil.NewSingleHostReverseProxy(destinationURL)
+    ModifyRequest(proxy, customHeader)
+    ModifyResponse(proxy)
+    return proxy
+}
+
 func (p *Proxy) Handler() http.Handler {
     proxy := httputil.NewSingleHostReverseProxy(p.targetURL)
     
-    // Set up transport with TLS config if needed
-    if p.targetURL.Scheme == "https" {
+    if p.targetURL != nil && p.targetURL.Scheme == "https" {
         proxy.Transport = &http.Transport{
             TLSClientConfig: p.tlsConfig.LoadClientConfig(),
         }
@@ -64,25 +70,24 @@ func TransparentProxyHandler(w http.ResponseWriter, r *http.Request, customHeade
 
 	// Set up TLS configuration for HTTPS targets
 	if r.URL.Scheme == "https" {
-		proxy.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Skip cert verification for development
-		}
-	}
-
-	proxy.ServeHTTP(w, r)
+        tlsConfig := tls.NewConfig("", "")
+        proxy.Transport = &http.Transport{
+            TLSClientConfig: tlsConfig.LoadClientConfig(),
+        }
+    }
+    
+    proxy.ServeHTTP(w, r)
 }
 
-// Target Mode
 func TargetSpecificProxyHandler(destinationURL *url.URL, w http.ResponseWriter, r *http.Request, customHeader string) {
-	// Create a reverse proxy
-	proxy := CreateProxy(destinationURL, customHeader)
+    proxy := CreateProxy(destinationURL, customHeader)
 
-	// Set up TLS configuration for HTTPS targets
-	if destinationURL.Scheme == "https" {
-		proxy.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Skip cert verification for development
-		}
-	}
+    if destinationURL.Scheme == "https" {
+        tlsConfig := tls.NewConfig("", "")
+        proxy.Transport = &http.Transport{
+            TLSClientConfig: tlsConfig.LoadClientConfig(),
+        }
+    }
 
-	proxy.ServeHTTP(w, r)
+    proxy.ServeHTTP(w, r)
 }
