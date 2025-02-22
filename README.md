@@ -55,7 +55,8 @@ Command-Line Options
 - You can replace these files with your own certificates if needed.
 - The certificates provided in the repository are for testing purposes.
 ### Logging
-- Logs are stored in the `logs` directory. You can customize the logging behavior by modifying the `logger/log.go` file.
+- Logs are stored in the `logs` directory.
+- You can customize the logging behavior by modifying the `logger/log.go` file.
 ## Code Structure
 - `proxy/`: Contains the core proxy logic, including request/response modification and transparent/target-specific handling.
 - `tls/`: Manages TLS certificate generation, rotation, and configuration.
