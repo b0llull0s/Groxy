@@ -13,8 +13,6 @@ Groxy is a powerful and customizable HTTP/HTTPS proxy written in Go. It is desig
 - `Authorization`: Controls who can access the proxy and what actions they can perform.
 - `Polyglot` Features: Add support for `C++` and multiple protocols.
 - `Rate Limiting Middleware`: Implement rate limiting to control traffic flow.
-## Certificates
-- The certificates provided in the repository are for testing purposes.
 ## Installation
 1. Clone the Repository:
 ```bash
@@ -23,11 +21,11 @@ cd Groxy
 ```
 2. Build the Project:
 ```bash
-    go build -o groxy
+go build -o groxy
 ```
 3. Run the Proxy:
 ```bash
-    ./groxy -http -https -H "X-Custom-Header: MyValue"
+./groxy -http -https -H "X-Custom-Header: MyValue"
 ```
 ## Usage
 Command-Line Options
@@ -39,23 +37,23 @@ Command-Line Options
 ### Examples
 - `Transparent Mode`:
 ```bash   
-    ./groxy --transparent -http -https
+./groxy --transparent -http -https
 ```
 - `Target-Specific Mode`:
 ```bash
-    ./groxy -t http://example.com -http -https -H "X-Request-ID: 12345"
+./groxy -t http://example.com -http -https -H "X-Request-ID: 12345"
 ```
 - `Custom Header`:
 ```bash
-    ./groxy -t http://example.com -http -H "Authorization: Bearer token"
+./groxy -t http://example.com -http -H "Authorization: Bearer token"
 ```
 ## Configuration
 ### TLS Certificates
-- Groxy supports dynamic TLS certificate generation and rotation.
 - Certificates are stored in the `certs` directory:
    - `certs/server-cert.pem`: The server certificate.
    - `certs/server-key.pem`: The server private key.
 - You can replace these files with your own certificates if needed.
+- The certificates provided in the repository are for testing purposes.
 ### Logging
 - Logs are stored in the `logs` directory. You can customize the logging behavior by modifying the `logger/log.go` file.
 ## Code Structure
@@ -65,7 +63,7 @@ Command-Line Options
 - `logger/`: Provides logging functionality for requests, responses, and errors.
 - `certs/`: Stores TLS certificates and keys.
 ## Contributing
-- If you'd like to contribute to Groxy, please follow these steps:
+If you'd like to contribute to Groxy, please follow these steps:
 1. Fork the repository.
 2. Create a new branch for your feature or bugfix.
 3. Submit a pull request with a detailed description of your changes.
