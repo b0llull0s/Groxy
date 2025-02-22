@@ -16,26 +16,26 @@ Groxy is a powerful and customizable HTTP/HTTPS proxy written in Go. It is desig
 ## Certificates
 - The certificates provided in the repository are for testing purposes.
 ## Installation
- 1. Clone the Repository:
+1. Clone the Repository:
 ```bash
 git clone https://github.com/yourusername/Groxy.git
 cd Groxy
 ```
- 2. Build the Project:
+2. Build the Project:
 ```bash
     go build -o groxy
 ```
- 3. Run the Proxy:
+3. Run the Proxy:
 ```bash
     ./groxy -http -https -H "X-Custom-Header: MyValue"
 ```
 ## Usage
 Command-Line Options
-    `-t <target>`: Specify the target URL for target-specific mode (e.g., http://example.com).
-    `--transparent`: Run in transparent mode.
-    `-H <header>`: Add a custom header to outgoing requests (e.g., X-Request-ID: 12345).
-    `-http`: Enable the HTTP server (listens on port 8080).
-    `-https`: Enable the HTTPS server (listens on port 8443).
+- `-t <target>`: Specify the target URL for target-specific mode (e.g., http://example.com).
+- `--transparent`: Run in transparent mode.
+- `-H <header>`: Add a custom header to outgoing requests (e.g., X-Request-ID: 12345).
+- `-http`: Enable the HTTP server (listens on port 8080).
+- `-https`: Enable the HTTPS server (listens on port 8443).
 ### Examples
 - `Transparent Mode`:
 ```bash   
@@ -66,6 +66,6 @@ Command-Line Options
 - `certs/`: Stores TLS certificates and keys.
 ## Contributing
 - If you'd like to contribute to Groxy, please follow these steps:
-    1. Fork the repository.
-    2. Create a new branch for your feature or bugfix.
-    3. Submit a pull request with a detailed description of your changes.
+1. Fork the repository.
+2. Create a new branch for your feature or bugfix.
+3. Submit a pull request with a detailed description of your changes.
