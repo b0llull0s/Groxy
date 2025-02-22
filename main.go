@@ -57,7 +57,6 @@ func main() {
 	tlsConfig := tls.NewConfig("certs/server-cert.pem", "certs/server-key.pem")
 	tlsManager := tls.NewManager(tlsConfig)
 
-	// Optional: Configure certificate rotation callbacks
 	tlsManager.OnRotation = func(cert *cryptotls.Certificate) {
 		fmt.Println("Certificate rotated successfully")
 	}

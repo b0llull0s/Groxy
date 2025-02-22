@@ -22,7 +22,7 @@ func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string) *P
     }
 }
 
-// CreateProxy is needed for backward compatibility with your handlers
+// CreateProxy is needed for backward compatibility with the handlers
 func CreateProxy(destinationURL *url.URL, customHeader string) *httputil.ReverseProxy {
     proxy := httputil.NewSingleHostReverseProxy(destinationURL)
     ModifyRequest(proxy, customHeader)
@@ -31,9 +31,15 @@ func CreateProxy(destinationURL *url.URL, customHeader string) *httputil.Reverse
 }
 
 func (p *Proxy) Handler() http.Handler {
+    if p.targetURL == nil {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            TransparentProxyHandler(w, r, p.customHeader)
+        })
+    }
+
     proxy := httputil.NewSingleHostReverseProxy(p.targetURL)
     
-    if p.targetURL != nil && p.targetURL.Scheme == "https" {
+    if p.targetURL.Scheme == "https" {
         proxy.Transport = &http.Transport{
             TLSClientConfig: p.tlsConfig.LoadClientConfig(),
         }
@@ -46,36 +52,37 @@ func (p *Proxy) Handler() http.Handler {
 
 // Transparent Mode
 func TransparentProxyHandler(w http.ResponseWriter, r *http.Request, customHeader string) {
-	// Extract the target host from the request
-	destinationHost := r.Host
-	if destinationHost == "" {
-		logger.LogTransparentProxyHandlerUnableToDetermineDestinationHost(w)
-		return
-	}
+    if r.Host == "localhost:8080" || r.Host == "localhost:8443" {
+        http.Error(w, "Cannot proxy to self", http.StatusBadRequest)
+        return
+    }
 
-	// Construct the target URL using the request's Host header
-	destinationURL := &url.URL{
-		Scheme: "http",
-		Host:   destinationHost,
-		Path:   r.URL.Path,
-	}
+    destinationHost := r.Host
+    if destinationHost == "" {
+        logger.LogTransparentProxyHandlerUnableToDetermineDestinationHost(w)
+        http.Error(w, "Unable to determine destination host", http.StatusBadRequest)
+        return
+    }
 
-	// If the request is HTTPS, update the scheme
-	if r.TLS != nil {
-		destinationURL.Scheme = "https"
-	}
+    destinationURL := &url.URL{
+        Scheme: "http",
+        Host:   destinationHost,
+        Path:   r.URL.Path,
+    }
 
-	// Create a reverse proxy
-	proxy := CreateProxy(destinationURL, customHeader)
+    if r.TLS != nil {
+        destinationURL.Scheme = "https"
+    }
 
-	// Set up TLS configuration for HTTPS targets
-	if r.URL.Scheme == "https" {
+    proxy := CreateProxy(destinationURL, customHeader)
+
+    if destinationURL.Scheme == "https" {
         tlsConfig := tls.NewConfig("", "")
         proxy.Transport = &http.Transport{
             TLSClientConfig: tlsConfig.LoadClientConfig(),
         }
     }
-    
+
     proxy.ServeHTTP(w, r)
 }
 
