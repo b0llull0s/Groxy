@@ -15,7 +15,6 @@ Groxy is a powerful and customizable HTTP/HTTPS proxy written in Go. It is desig
 - `Rate Limiting Middleware`: Implement rate limiting to control traffic flow.
 ## Certificates
 - The certificates provided in the repository are for testing purposes.
-- You can generate your own certificates using the following guide:
 ## Installation
  1. Clone the Repository:
 ```bash
