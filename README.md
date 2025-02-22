@@ -1,80 +1,72 @@
 # Groxy
-- Groxy is a modular proxy written in `Go`, designed to be integrated with a `C2` server in the future.
+Groxy is a powerful and customizable HTTP/HTTPS proxy written in Go. It is designed to handle both transparent and target-specific proxying, with support for custom headers, User-Agent rotation, TLS certificate management, and dynamic certificate rotation.
 ## Features
-
-- `Transparent Mode`: Operate in a mode that intercepts all the traffic.
-- `Target Mode`: Intercepts traffic for a specific target.
-- `Custom Headers`: Add custom headers to requests with the `-H` flag.
+- `Transparent Proxy Mode`: Automatically forwards requests to the destination host without requiring explicit configuration.
+- `Target-Specific Proxy Mode`: Directs traffic to a specific target URL.
+- `Custom Headers`: Add custom headers to outgoing requests.
+- `TLS Support`: Built-in support for HTTPS with dynamic certificate generation and rotation.
+- `Request/Response Modification`: Modify incoming responses and outgoing requests on the fly.
+- `Logging`: Comprehensive logging for both requests and responses.
+- `Certificate Management`: Automatically generate and rotate TLS certificates for secure communication.
 - `User-Agent Rotation`: Rotate `User-Agent` strings to mimic different browsers or devices.
-- `HTTPS Server`: Deploy an HTTPS server.
-- `Logging`: Detailed logging of proxy activity.
-
 ## Planned Features
-
-- `TLS` Encryption: Enhance security with TLS encryption.
-- `Certificate rotation`: Periodically replacing SSL/TLS certificates with new ones to ensure the ongoing security of the connection.
 - `Authorization`: Controls who can access the proxy and what actions they can perform.
 - `Polyglot` Features: Add support for `C++` and multiple protocols.
 - `Rate Limiting Middleware`: Implement rate limiting to control traffic flow.
-- `Validation` for incoming and outgoing requests.
-
 ## Certificates
 - The certificates provided in the repository are for testing purposes.
 - You can generate your own certificates using the following guide:
-### Generating Certificates
-- Generate `CA` private key
+## Installation
+ 1. Clone the Repository:
+```bash
+git clone https://github.com/yourusername/Groxy.git
+cd Groxy
 ```
-openssl genrsa -out ca-key.pem 2048
+ 2. Build the Project:
+```bash
+    go build -o groxy
 ```
-- Generate `CA` certificate
+ 3. Run the Proxy:
+```bash
+    ./groxy -http -https -H "X-Custom-Header: MyValue"
 ```
-openssl req -x509 -new -nodes -key ca-key.pem -sha256 -days 365 -out ca-cert.pem -subj "/CN=My CA"
+## Usage
+Command-Line Options
+    `-t <target>`: Specify the target URL for target-specific mode (e.g., http://example.com).
+    `--transparent`: Run in transparent mode.
+    `-H <header>`: Add a custom header to outgoing requests (e.g., X-Request-ID: 12345).
+    `-http`: Enable the HTTP server (listens on port 8080).
+    `-https`: Enable the HTTPS server (listens on port 8443).
+### Examples
+- `Transparent Mode`:
+```bash   
+    ./groxy --transparent -http -https
 ```
-- Create `openssl.cnf` file:
+- `Target-Specific Mode`:
+```bash
+    ./groxy -t http://example.com -http -https -H "X-Request-ID: 12345"
 ```
-[req]
-default_bits = 2048
-prompt = no
-default_md = sha256
-distinguished_name = dn
-x509_extensions = v3_ca
-
-[dn]
-C = US
-ST = California
-L = San Francisco
-O = Your Organization
-CN = localhost
-
-[v3_ca]
-subjectAltName = @alt_names
-
-[alt_names]
-DNS.1 = localhost
-IP.1 = 127.0.0.1
+- `Custom Header`:
+```bash
+    ./groxy -t http://example.com -http -H "Authorization: Bearer token"
 ```
-- Generate server private key
-```
-openssl genrsa -out server-key.pem 2048
-```
-- Create a certificate signing request (`CSR`)
-```
-openssl req -new -key server-key.pem -out server-req.pem -config openssl.cnf
-```
-- Sign the `CSR` with the `CA` certificate:
-```
-openssl x509 -req -in server-req.pem -CA ca-cert.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -days 365 -sha256 -extensions v3_ca -extfile openssl.cnf
-```
-- Check the certificate to ensure it includes `127.0.0.1` in the `SAN` field:
-```
-openssl x509 -in server-cert.pem -text -noout
-```
-- Look for the following section:
-```
-    X509v3 Subject Alternative Name:
-        DNS:localhost, IP Address:127.0.0.1
-```
-- To test the server, use the following command:
-```
-curl --cacert certs/ca-cert.pem https://127.0.0.1:8443
-```
+## Configuration
+### TLS Certificates
+- Groxy supports dynamic TLS certificate generation and rotation.
+- Certificates are stored in the `certs` directory:
+   - `certs/server-cert.pem`: The server certificate.
+   - `certs/server-key.pem`: The server private key.
+- You can replace these files with your own certificates if needed.
+### Logging
+- Logs are stored in the `logs` directory. You can customize the logging behavior by modifying the `logger/log.go` file.
+## Code Structure
+- `proxy/`: Contains the core proxy logic, including request/response modification and transparent/target-specific handling.
+- `tls/`: Manages TLS certificate generation, rotation, and configuration.
+- `servers/`: Handles HTTP/HTTPS server initialization and management.
+- `logger/`: Provides logging functionality for requests, responses, and errors.
+- `certs/`: Stores TLS certificates and keys.
+## Contributing
+- If you'd like to contribute to Groxy, please follow these steps:
+    1. Fork the repository.
+    2. Create a new branch for your feature or bugfix.
+    3. Submit a pull request with a detailed description of your changes.

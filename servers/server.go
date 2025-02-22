@@ -1,4 +1,3 @@
-// In servers/server.go
 package servers
 
 import (
