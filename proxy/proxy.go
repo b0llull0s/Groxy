@@ -22,24 +22,12 @@ func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string) *P
     }
 }
 
-// CreateProxy is needed for backward compatibility with the handlers
-func CreateProxy(destinationURL *url.URL, customHeader string) *httputil.ReverseProxy {
-    proxy := httputil.NewSingleHostReverseProxy(destinationURL)
-    ModifyRequest(proxy, customHeader)
-    ModifyResponse(proxy)
-    return proxy
-}
-
-func (p *Proxy) Handler() http.Handler {
-    if p.targetURL == nil {
-        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-            TransparentProxyHandler(w, r, p.customHeader)
-        })
-    }
-
-    proxy := httputil.NewSingleHostReverseProxy(p.targetURL)
+// createReverseProxy creates a configured reverse proxy
+func (p *Proxy) createReverseProxy(targetURL *url.URL) *httputil.ReverseProxy {
+    proxy := httputil.NewSingleHostReverseProxy(targetURL)
     
-    if p.targetURL.Scheme == "https" {
+    // Configure TLS if needed
+    if targetURL.Scheme == "https" {
         proxy.Transport = &http.Transport{
             TLSClientConfig: p.tlsConfig.LoadClientConfig(),
         }
@@ -50,8 +38,20 @@ func (p *Proxy) Handler() http.Handler {
     return proxy
 }
 
-// Transparent Mode
-func TransparentProxyHandler(w http.ResponseWriter, r *http.Request, customHeader string) {
+func (p *Proxy) Handler() http.Handler {
+    // Transparent mode
+    if p.targetURL == nil {
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            p.handleTransparentProxy(w, r)
+        })
+    }
+    
+    // Target-specific mode
+    return p.createReverseProxy(p.targetURL)
+}
+
+// handleTransparentProxy handles transparent proxy mode requests
+func (p *Proxy) handleTransparentProxy(w http.ResponseWriter, r *http.Request) {
     if r.Host == "localhost:8080" || r.Host == "localhost:8443" {
         http.Error(w, "Cannot proxy to self", http.StatusBadRequest)
         return
@@ -60,41 +60,20 @@ func TransparentProxyHandler(w http.ResponseWriter, r *http.Request, customHeade
     destinationHost := r.Host
     if destinationHost == "" {
         logger.LogTransparentProxyHandlerUnableToDetermineDestinationHost(w)
-        http.Error(w, "Unable to determine destination host", http.StatusBadRequest)
         return
     }
 
+    scheme := "http"
+    if r.TLS != nil {
+        scheme = "https"
+    }
+
     destinationURL := &url.URL{
-        Scheme: "http",
+        Scheme: scheme,
         Host:   destinationHost,
         Path:   r.URL.Path,
     }
 
-    if r.TLS != nil {
-        destinationURL.Scheme = "https"
-    }
-
-    proxy := CreateProxy(destinationURL, customHeader)
-
-    if destinationURL.Scheme == "https" {
-        tlsConfig := tls.NewConfig("", "")
-        proxy.Transport = &http.Transport{
-            TLSClientConfig: tlsConfig.LoadClientConfig(),
-        }
-    }
-
-    proxy.ServeHTTP(w, r)
-}
-
-func TargetSpecificProxyHandler(destinationURL *url.URL, w http.ResponseWriter, r *http.Request, customHeader string) {
-    proxy := CreateProxy(destinationURL, customHeader)
-
-    if destinationURL.Scheme == "https" {
-        tlsConfig := tls.NewConfig("", "")
-        proxy.Transport = &http.Transport{
-            TLSClientConfig: tlsConfig.LoadClientConfig(),
-        }
-    }
-
+    proxy := p.createReverseProxy(destinationURL)
     proxy.ServeHTTP(w, r)
 }
