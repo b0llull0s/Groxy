@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/url"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"Groxy/logger"
 	"Groxy/proxy"
@@ -22,7 +26,6 @@ var (
 )
 
 func main() {
-	// Parse command-line flags
 	flag.StringVar(&targetURLStr, "t", "", "Target URL for target-specific mode (e.g., http://10.10.10.80)")
 	flag.BoolVar(&transparent, "transparent", false, "Run in transparent mode")
 	flag.StringVar(&customHeader, "H", "", "Add a custom header (e.g., \"X-Request-ID: 12345\")")
@@ -30,11 +33,9 @@ func main() {
 	flag.BoolVar(&enableHTTPS, "https", false, "Enable the HTTPS server")
 	flag.Parse()
 
-	// Initialize logging
 	logger.Init()
 	defer logger.LogFile.Close()
 
-	// Validate flags
 	if !transparent && targetURLStr == "" {
 		fmt.Println("Error: You must specify either -t <target> or --transparent")
 		flag.Usage()
@@ -53,7 +54,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Load TLS configuration
 	tlsConfig := tls.NewConfig("certs/server-cert.pem", "certs/server-key.pem")
 	tlsManager := tls.NewManager(tlsConfig)
 
@@ -64,7 +64,6 @@ func main() {
 		fmt.Printf("Certificate rotation error: %v\n", err)
 	}
 
-	// Create proxy handler
 	var targetURL *url.URL
 	if !transparent {
 		var err error
@@ -77,7 +76,6 @@ func main() {
 
 	proxy := proxy.NewProxy(targetURL, tlsConfig, customHeader)
 
-	// Create server
 	server := servers.NewServer(
 		proxy.Handler(),
 		tlsManager,
@@ -87,15 +85,33 @@ func main() {
 		"8443",
 	)
 
-	// Start servers based on flags
 	if enableHTTP {
-		go server.StartHTTP()
+		if err := server.StartHTTP(); err != nil {
+			fmt.Printf("Failed to start HTTP server: %v\n", err)
+			os.Exit(1)
+		}
 		fmt.Println("HTTP server is running on port 8080")
 	}
 	if enableHTTPS {
-		go server.StartHTTPS()
+		if err := server.StartHTTPS(); err != nil {
+			fmt.Printf("Failed to start HTTPS server: %v\n", err)
+			os.Exit(1)
+		}
 		fmt.Println("HTTPS server is running on port 8443")
 	}
 
-	logger.KeepServerRunning()
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	sig := <-sigChan
+	fmt.Printf("Received signal %v, shutting down gracefully...\n", sig)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		fmt.Printf("Server shutdown error: %v\n", err)
+	}
+
+	fmt.Println("Server shutdown complete")
 }

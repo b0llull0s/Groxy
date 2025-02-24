@@ -12,6 +12,7 @@ import (
     "os"
     "sync"
     "time"
+    "context"
 )
 
 type Manager struct {
@@ -21,6 +22,7 @@ type Manager struct {
     rotationDone chan struct{}   
     OnRotation   func(*cryptotls.Certificate)
     OnError      func(error)
+    rotateCancel context.CancelFunc
 }
 
 func NewManager(config *Config) *Manager {
@@ -30,7 +32,6 @@ func NewManager(config *Config) *Manager {
     }
 }
 
-// GenerateCertificate creates a new self-signed certificate
 func (m *Manager) GenerateCertificate() error {
     cfg := m.config.GetCertificateConfig()
     
@@ -105,6 +106,13 @@ func (m *Manager) LoadServerConfig() (*cryptotls.Config, error) {
 }
 
 func (m *Manager) StartRotation(interval time.Duration) {
+    if m.rotateCancel != nil {
+        m.rotateCancel()
+    }
+
+    ctx, cancel := context.WithCancel(context.Background())
+    m.rotateCancel = cancel
+
     go func() {
         ticker := time.NewTicker(interval)
         defer ticker.Stop()
@@ -115,7 +123,7 @@ func (m *Manager) StartRotation(interval time.Duration) {
                 if err := m.rotateCertificate(); err != nil && m.OnError != nil {
                     m.OnError(err)
                 }
-            case <-m.rotationDone:
+            case <-ctx.Done():
                 return
             }
         }
@@ -123,7 +131,10 @@ func (m *Manager) StartRotation(interval time.Duration) {
 }
 
 func (m *Manager) StopRotation() {
-    close(m.rotationDone)
+    if m.rotateCancel != nil {
+        m.rotateCancel()
+        m.rotateCancel = nil
+    }
 }
 
 func (m *Manager) rotateCertificate() error {

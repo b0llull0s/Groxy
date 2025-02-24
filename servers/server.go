@@ -1,11 +1,14 @@
 package servers
 
 import (
+    "context"
     "net/http"
     "fmt"
     "Groxy/tls"
+    "Groxy/logger"
     "time"
     "strings"
+    "sync"
 )
 
 type Server struct {
@@ -16,6 +19,9 @@ type Server struct {
     httpPort    string
     httpsPort   string
     enableRedirection bool
+    wg          sync.WaitGroup
+    httpServer  *http.Server
+    httpsServer *http.Server
 }
 
 func NewServer(handler http.Handler, tlsManager *tls.Manager, certFile, keyFile string, httpPort, httpsPort string) *Server {
@@ -26,7 +32,7 @@ func NewServer(handler http.Handler, tlsManager *tls.Manager, certFile, keyFile 
         keyFile:    keyFile,
         httpPort:   httpPort,
         httpsPort:  httpsPort,
-        enableRedirection: true, // Enable redirection by default
+        enableRedirection: true,
     }
 }
 
@@ -56,12 +62,22 @@ func (s *Server) StartHTTP() error {
         serverHandler = s.handler
     }
     
-    server := &http.Server{
+    s.httpServer = &http.Server{
         Addr:    addr,
         Handler: serverHandler,
     }
     
-    return server.ListenAndServe()
+    s.wg.Add(1)
+    go func() {
+        defer s.wg.Done()
+        logger.LogHTTPServerStart(s.httpPort)
+        
+        if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            logger.LogServerError(err)
+        }
+    }()
+    
+    return nil
 }
 
 func (s *Server) StartHTTPS() error {
@@ -70,16 +86,63 @@ func (s *Server) StartHTTPS() error {
         return fmt.Errorf("failed to load TLS config: %v", err)
     }
 
-    // Start certificate rotation (e.g., every 30 days)
     s.tlsManager.StartRotation(30 * 24 * time.Hour)
     
     addr := ":" + s.httpsPort
-    server := &http.Server{
+    s.httpsServer = &http.Server{
         Addr:      addr,
         Handler:   s.handler,
         TLSConfig: tlsConfig,
     }
     
-    return server.ListenAndServeTLS(s.certFile, s.keyFile)
+    s.wg.Add(1)
+    go func() {
+        defer s.wg.Done()
+        logger.LogHTTPSServerStart(s.httpsPort)
+        
+        if err := s.httpsServer.ListenAndServeTLS(s.certFile, s.keyFile); err != nil && err != http.ErrServerClosed {
+            logger.LogServerError(err)
+        }
+    }()
+    
+    return nil
 }
 
+func (s *Server) Shutdown(ctx context.Context) error {
+    if ctx == nil {
+        var cancel context.CancelFunc
+        ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
+        defer cancel()
+    }
+    
+    if s.httpServer != nil {
+        if err := s.httpServer.Shutdown(ctx); err != nil {
+            return err
+        }
+    }
+    
+    if s.httpsServer != nil {
+        if err := s.httpsServer.Shutdown(ctx); err != nil {
+            return err
+        }
+    }
+    
+    s.tlsManager.StopRotation()
+    
+    waitCh := make(chan struct{})
+    go func() {
+        s.wg.Wait()
+        close(waitCh)
+    }()
+    
+    select {
+    case <-waitCh:
+        return nil
+    case <-ctx.Done():
+        return ctx.Err()
+    }
+}
+
+func (s *Server) WaitForServers() {
+    s.wg.Wait()
+}

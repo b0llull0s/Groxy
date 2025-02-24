@@ -38,19 +38,39 @@ func LogResponse(res *http.Response) {
 }
 
 func LogHTTPServerStart(port string) {
-	log.Printf("Starting HTTP server on %s", port)
+	log.Printf("Starting HTTP server on port %s", port)
 }
 
 func LogHTTPSServerStart(port string) {
-	log.Printf("Starting HTTPS server on %s", port)
+	log.Printf("Starting HTTPS server on port %s", port)
 }
 
 func LogServerError(err error) {
-	log.Fatalf("Server error: %v", err)
+	log.Printf("Server error: %v", err)
+}
+
+func LogServerShutdown(serverType string) {
+	log.Printf("%s server shutting down", serverType)
+}
+
+func LogServerShutdownComplete(serverType string) {
+	log.Printf("%s server shutdown complete", serverType)
+}
+
+func LogGracefulShutdownStarted() {
+	log.Println("Graceful shutdown initiated")
+}
+
+func LogGracefulShutdownComplete() {
+	log.Println("Graceful shutdown completed")
 }
 
 func LogCertificateError(err error) {
 	log.Printf("Certificate error: %v", err)
+}
+
+func LogCertificateRotation() {
+	log.Println("TLS certificate rotated")
 }
 
 func LogTransparentProxyHandlerUnableToDetermineDestinationHost(w http.ResponseWriter) {
