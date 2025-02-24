@@ -7,6 +7,7 @@ import (
 	"strings" 
 	"time"
 	"Groxy/logger"
+	"sync"
 )
 
 var (
@@ -25,18 +26,17 @@ var (
 		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
 		"Mozilla/5.0 (X11; Linux i686; rv:124.0) Gecko/20100101 Firefox/124.0",
 	}
+	userAgentMutex sync.Mutex
+    rnd           = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
-// ModifyRequest modifies outgoing requests.
 func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
 
-		// Rotate user-agent
 		req.Header.Set("User-Agent", getRandomUserAgent())
 
-		// Add Custom Header
 		if customHeader != "" {
 			parts := strings.SplitN(customHeader, ":", 2)
 			if len(parts) == 2 {
@@ -52,8 +52,8 @@ func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
 	}
 }
 
-// Returns a random user-agent from the list.
 func getRandomUserAgent() string {
-	rand.Seed(time.Now().UnixNano())
-	return userAgents[rand.Intn(len(userAgents))]
+    userAgentMutex.Lock()
+    defer userAgentMutex.Unlock()
+    return userAgents[rnd.Intn(len(userAgents))]
 }
