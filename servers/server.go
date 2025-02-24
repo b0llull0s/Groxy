@@ -5,7 +5,7 @@ import (
     "fmt"
     "Groxy/tls"
     "time"
-
+    "strings"
 )
 
 type Server struct {
@@ -15,6 +15,7 @@ type Server struct {
     keyFile     string
     httpPort    string
     httpsPort   string
+    enableRedirection bool
 }
 
 func NewServer(handler http.Handler, tlsManager *tls.Manager, certFile, keyFile string, httpPort, httpsPort string) *Server {
@@ -25,15 +26,41 @@ func NewServer(handler http.Handler, tlsManager *tls.Manager, certFile, keyFile 
         keyFile:    keyFile,
         httpPort:   httpPort,
         httpsPort:  httpsPort,
+        enableRedirection: true, // Enable redirection by default
     }
+}
+
+func (s *Server) SetRedirection(enable bool) {
+    s.enableRedirection = enable
 }
 
 func (s *Server) StartHTTP() error {
     addr := ":" + s.httpPort
+    
+    var serverHandler http.Handler
+    if s.enableRedirection {
+        serverHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+            host := r.Host
+            if hostParts := strings.Split(host, ":"); len(hostParts) > 0 {
+                host = hostParts[0]
+            }
+            
+            httpsURL := fmt.Sprintf("https://%s:%s%s", host, s.httpsPort, r.URL.Path)
+            if r.URL.RawQuery != "" {
+                httpsURL += "?" + r.URL.RawQuery
+            }
+            
+            http.Redirect(w, r, httpsURL, http.StatusMovedPermanently)
+        })
+    } else {
+        serverHandler = s.handler
+    }
+    
     server := &http.Server{
         Addr:    addr,
-        Handler: s.handler,
+        Handler: serverHandler,
     }
+    
     return server.ListenAndServe()
 }
 
@@ -55,3 +82,4 @@ func (s *Server) StartHTTPS() error {
     
     return server.ListenAndServeTLS(s.certFile, s.keyFile)
 }
+
