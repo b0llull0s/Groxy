@@ -32,7 +32,7 @@ func NewServer(handler http.Handler, tlsManager *tls.Manager, certFile, keyFile 
         keyFile:    keyFile,
         httpPort:   httpPort,
         httpsPort:  httpsPort,
-        enableRedirection: true,
+        enableRedirection: true, // Change to false to disable redirection
     }
 }
 

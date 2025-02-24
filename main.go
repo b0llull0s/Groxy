@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"flag"
-	"net/url"
 	"fmt"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,6 +23,8 @@ var (
 	customHeader  string
 	enableHTTP    bool
 	enableHTTPS   bool
+	workers       int
+	queueSize     int
 )
 
 func main() {
@@ -31,6 +33,8 @@ func main() {
 	flag.StringVar(&customHeader, "H", "", "Add a custom header (e.g., \"X-Request-ID: 12345\")")
 	flag.BoolVar(&enableHTTP, "http", false, "Enable the HTTP server")
 	flag.BoolVar(&enableHTTPS, "https", false, "Enable the HTTPS server")
+	flag.IntVar(&workers, "workers", 0, "Number of worker goroutines to use (0 disables worker pool)")
+	flag.IntVar(&queueSize, "queue-size", 100, "Size of the job queue for worker pool")
 	flag.Parse()
 
 	logger.Init()
@@ -74,10 +78,16 @@ func main() {
 		}
 	}
 
-	proxy := proxy.NewProxy(targetURL, tlsConfig, customHeader)
+	proxyHandler := proxy.NewProxy(targetURL, tlsConfig, customHeader)
+	
+	// Enable worker pool if workers > 0
+	if workers > 0 {
+		fmt.Printf("Enabling worker pool with %d workers and queue size of %d\n", workers, queueSize)
+		proxyHandler.EnableWorkerPool(workers, queueSize)
+	}
 
 	server := servers.NewServer(
-		proxy.Handler(),
+		proxyHandler.Handler(),
 		tlsManager,
 		"certs/server-cert.pem",
 		"certs/server-key.pem",
@@ -105,6 +115,11 @@ func main() {
 
 	sig := <-sigChan
 	fmt.Printf("Received signal %v, shutting down gracefully...\n", sig)
+
+	// Stop worker pool if it was enabled
+	if workers > 0 {
+		proxyHandler.StopWorkerPool()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
