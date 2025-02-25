@@ -38,6 +38,7 @@ Command-Line Options
 - `-https`: Enable the HTTPS server (listens on port 8443).
 - `-workers`: Determine the number of workers. Is set to `0` by default.
 - `queue-size`: Detemine the buffer size for pending requests.
+- `timeout`: Timeout for requests in seconds. Is set to `30` seconds by default.
 ### Examples
 - `Transparent Mode`:
 ```bash   
