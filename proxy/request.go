@@ -27,7 +27,8 @@ var (
 		"Mozilla/5.0 (X11; Linux i686; rv:124.0) Gecko/20100101 Firefox/124.0",
 	}
 	userAgentMutex sync.Mutex
-    rnd           = rand.New(rand.NewSource(time.Now().UnixNano()))
+	rndMutex       sync.Mutex
+	rnd            = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
 func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
@@ -53,7 +54,11 @@ func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
 }
 
 func getRandomUserAgent() string {
-    userAgentMutex.Lock()
-    defer userAgentMutex.Unlock()
-    return userAgents[rnd.Intn(len(userAgents))]
+	rndMutex.Lock()
+	index := rnd.Intn(len(userAgents))
+	rndMutex.Unlock()
+	
+	userAgentMutex.Lock()
+	defer userAgentMutex.Unlock()
+	return userAgents[index]
 }
