@@ -25,6 +25,7 @@ var (
 	enableHTTPS   bool
 	workers       int
 	queueSize     int
+	timeout       int
 )
 
 func main() {
@@ -35,6 +36,7 @@ func main() {
 	flag.BoolVar(&enableHTTPS, "https", false, "Enable the HTTPS server")
 	flag.IntVar(&workers, "workers", 0, "Number of worker goroutines to use (0 disables worker pool)")
 	flag.IntVar(&queueSize, "queue-size", 100, "Size of the job queue for worker pool")
+	flag.IntVar(&timeout, "timeout", 30, "Timeout for requests in seconds")
 	flag.Parse()
 
 	logger.Init()
@@ -80,7 +82,8 @@ func main() {
 
 	proxyHandler := proxy.NewProxy(targetURL, tlsConfig, customHeader)
 	
-	// Enable worker pool if workers > 0
+	proxyHandler.SetTimeout(time.Duration(timeout) * time.Second)
+	
 	if workers > 0 {
 		fmt.Printf("Enabling worker pool with %d workers and queue size of %d\n", workers, queueSize)
 		proxyHandler.EnableWorkerPool(workers, queueSize)
@@ -116,13 +119,14 @@ func main() {
 	sig := <-sigChan
 	fmt.Printf("Received signal %v, shutting down gracefully...\n", sig)
 
-	// Stop worker pool if it was enabled
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	if workers > 0 {
 		proxyHandler.StopWorkerPool()
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	proxyHandler.Shutdown()
 
 	if err := server.Shutdown(ctx); err != nil {
 		fmt.Printf("Server shutdown error: %v\n", err)

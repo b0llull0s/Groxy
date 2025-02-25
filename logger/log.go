@@ -87,6 +87,14 @@ func LogCustomHeaderError(customHeader string) {
     log.Printf("Invalid custom header format: %s\n", customHeader)
 }
 
+func LogRequestTimeout(r *http.Request) {
+    log.Printf("Request timeout or cancelled: %s %s\n", r.Method, r.URL.String())
+}
+
+func LogContextCancelled(reason string) {
+    log.Printf("Context cancelled: %s\n", reason)
+}
+
 func KeepServerRunning() {
     log.Println("Proxy server is running")
     select {}

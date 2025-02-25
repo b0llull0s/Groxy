@@ -9,6 +9,7 @@ import (
     "time"
     "strings"
     "sync"
+    "net"
 )
 
 type Server struct {
@@ -22,9 +23,12 @@ type Server struct {
     wg          sync.WaitGroup
     httpServer  *http.Server
     httpsServer *http.Server
+    ctx         context.Context
+    cancel      context.CancelFunc
 }
 
 func NewServer(handler http.Handler, tlsManager *tls.Manager, certFile, keyFile string, httpPort, httpsPort string) *Server {
+    ctx, cancel := context.WithCancel(context.Background())
     return &Server{
         handler:    handler,
         tlsManager: tlsManager,
@@ -33,6 +37,8 @@ func NewServer(handler http.Handler, tlsManager *tls.Manager, certFile, keyFile 
         httpPort:   httpPort,
         httpsPort:  httpsPort,
         enableRedirection: true, // Change to false to disable redirection
+        ctx:        ctx,
+        cancel:     cancel,
     }
 }
 
@@ -63,8 +69,12 @@ func (s *Server) StartHTTP() error {
     }
     
     s.httpServer = &http.Server{
-        Addr:    addr,
-        Handler: serverHandler,
+        Addr:         addr,
+        Handler:      serverHandler,
+        ReadTimeout:  30 * time.Second,
+        WriteTimeout: 30 * time.Second,
+        IdleTimeout:  120 * time.Second,
+        BaseContext:  func(_ net.Listener) context.Context { return s.ctx },
     }
     
     s.wg.Add(1)
@@ -90,9 +100,13 @@ func (s *Server) StartHTTPS() error {
     
     addr := ":" + s.httpsPort
     s.httpsServer = &http.Server{
-        Addr:      addr,
-        Handler:   s.handler,
-        TLSConfig: tlsConfig,
+        Addr:         addr,
+        Handler:      s.handler,
+        TLSConfig:    tlsConfig,
+        ReadTimeout:  30 * time.Second,
+        WriteTimeout: 30 * time.Second,
+        IdleTimeout:  120 * time.Second,
+        BaseContext:  func(_ net.Listener) context.Context { return s.ctx },
     }
     
     s.wg.Add(1)
@@ -115,16 +129,22 @@ func (s *Server) Shutdown(ctx context.Context) error {
         defer cancel()
     }
     
+    s.cancel()
+    
     if s.httpServer != nil {
+        logger.LogServerShutdown("HTTP")
         if err := s.httpServer.Shutdown(ctx); err != nil {
             return err
         }
+        logger.LogServerShutdownComplete("HTTP")
     }
     
     if s.httpsServer != nil {
+        logger.LogServerShutdown("HTTPS")
         if err := s.httpsServer.Shutdown(ctx); err != nil {
             return err
         }
+        logger.LogServerShutdownComplete("HTTPS")
     }
     
     s.tlsManager.StopRotation()
@@ -137,8 +157,10 @@ func (s *Server) Shutdown(ctx context.Context) error {
     
     select {
     case <-waitCh:
+        logger.LogGracefulShutdownComplete()
         return nil
     case <-ctx.Done():
+        logger.LogContextCancelled("Server shutdown timed out")
         return ctx.Err()
     }
 }
