@@ -1,15 +1,23 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"sync"
 )
 
+const (
+	LevelInfo    = "INFO"
+	LevelWarning = "WARNING"
+	LevelError   = "ERROR"
+	LevelDebug   = "DEBUG"
+)
+
 var (
 	LogFile *os.File
-	mu      sync.Mutex /
+	mu      sync.Mutex 
 )
 
 func Init() {
@@ -22,14 +30,38 @@ func Init() {
 	log.SetOutput(LogFile)
 }
 
+func logWithLevel(level, format string, v ...interface{}) {
+	mu.Lock()
+	defer mu.Unlock()
+	
+	msg := fmt.Sprintf(format, v...)
+	log.Printf("[%s] %s", level, msg)
+}
+
+func Info(format string, v ...interface{}) {
+	logWithLevel(LevelInfo, format, v...)
+}
+
+func Warning(format string, v ...interface{}) {
+	logWithLevel(LevelWarning, format, v...)
+}
+
+func Error(format string, v ...interface{}) {
+	logWithLevel(LevelError, format, v...)
+}
+
+func Debug(format string, v ...interface{}) {
+	logWithLevel(LevelDebug, format, v...)
+}
+
 func LogRequest(req *http.Request) {
 	mu.Lock()
 	defer mu.Unlock()
 	
-	log.Printf("Request: %s %s\n", req.Method, req.URL.String())
+	log.Printf("[INFO] Request: %s %s", req.Method, req.URL.String())
 	for name, values := range req.Header {
 		for _, value := range values {
-			log.Printf("Header: %s: %s\n", name, value)
+			log.Printf("[DEBUG] Header: %s: %s", name, value)
 		}
 	}
 }
@@ -38,118 +70,89 @@ func LogResponse(res *http.Response) {
 	mu.Lock()
 	defer mu.Unlock()
 	
-	log.Printf("Response: %s\n", res.Status)
+	log.Printf("[INFO] Response: %s", res.Status)
 	for name, values := range res.Header {
 		for _, value := range values {
-			log.Printf("Header: %s: %s\n", name, value)
+			log.Printf("[DEBUG] Header: %s: %s", name, value)
 		}
 	}
 }
 
-func LogHTTPServerStart(port string) {
-	mu.Lock()
-	defer mu.Unlock()
+func ServerEvent(eventType, details string) {
+	Info("%s: %s", eventType, details)
+}
+
+func RequestError(w http.ResponseWriter, status int, message string, err error) {
+	if err != nil {
+		Error("%s: %v", message, err)
+	} else {
+		Error("%s", message)
+	}
 	
-	log.Printf("Starting HTTP server on port %s", port)
+	if w != nil {
+		http.Error(w, message, status)
+	}
+}
+
+// --- Backward compatibility functions ---
+
+func LogHTTPServerStart(port string) {
+	Info("Starting HTTP server on port %s", port)
 }
 
 func LogHTTPSServerStart(port string) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Printf("Starting HTTPS server on port %s", port)
+	Info("Starting HTTPS server on port %s", port)
 }
 
 func LogServerError(err error) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Printf("Server error: %v", err)
+	Error("Server error: %v", err)
 }
 
 func LogServerShutdown(serverType string) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Printf("%s server shutting down", serverType)
+	Info("%s server shutting down", serverType)
 }
 
 func LogServerShutdownComplete(serverType string) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Printf("%s server shutdown complete", serverType)
+	Info("%s server shutdown complete", serverType)
 }
 
 func LogGracefulShutdownStarted() {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Println("Graceful shutdown initiated")
+	Info("Graceful shutdown initiated")
 }
 
 func LogGracefulShutdownComplete() {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Println("Graceful shutdown completed")
+	Info("Graceful shutdown completed")
 }
 
 func LogCertificateError(err error) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Printf("Certificate error: %v", err)
+	Error("Certificate error: %v", err)
 }
 
 func LogCertificateRotation() {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Println("TLS certificate rotated")
+	Info("TLS certificate rotated")
 }
 
 func LogTransparentProxyHandlerUnableToDetermineDestinationHost(w http.ResponseWriter) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Printf("TransparentProxyHandler Error: Unable to determine target host")
-	http.Error(w, "Unable to determine target host", http.StatusBadRequest)
+	RequestError(w, http.StatusBadRequest, "Unable to determine target host", nil)
 }
 
 func LogTransparentProxyHandlerFailedToParseTargetURL(w http.ResponseWriter, err error) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-	log.Printf("TransparentProxyHandler Error: Failed to parse target URL - %v", err)
-	http.Error(w, "Failed to parse target URL", http.StatusInternalServerError)
+	RequestError(w, http.StatusInternalServerError, "Failed to parse target URL", err)
 }
 
 func LogCustomHeaderError(customHeader string) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-    log.Printf("Invalid custom header format: %s\n", customHeader)
+	Warning("Invalid custom header format: %s", customHeader)
 }
 
 func LogRequestTimeout(r *http.Request) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-    log.Printf("Request timeout or cancelled: %s %s\n", r.Method, r.URL.String())
+	Warning("Request timeout or cancelled: %s %s", r.Method, r.URL.String())
 }
 
 func LogContextCancelled(reason string) {
-	mu.Lock()
-	defer mu.Unlock()
-	
-    log.Printf("Context cancelled: %s\n", reason)
+	Warning("Context cancelled: %s", reason)
 }
 
 func KeepServerRunning() {
-	mu.Lock()
-	defer mu.Unlock()
-	
-    log.Println("Proxy server is running")
-    select {}
+	Info("Proxy server is running")
+	select {}
 }
