@@ -1,4 +1,4 @@
-package exfil
+package c2
 
 import (
 	"bytes"
