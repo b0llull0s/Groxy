@@ -11,10 +11,7 @@ Groxy is a powerful and customizable HTTP/HTTPS proxy written in Go. It is desig
 - `User-Agent Rotation`: Rotate `User-Agent` strings to mimic different browsers or devices.
 - `HTTP to HTTPS redirection`: Redirection is set to `True` by default but this can be change in `server.go`.
 - `Worker Pools for Request Handling`: Specify how many workers should be created to handle incoming requests, and determine the buffer size for pending requests.
-## Planned Features
-- `Authorization`: Controls who can access the proxy and what actions they can perform.
-- `Polyglot` Features: Add support for `C++` and multiple protocols.
-- `Rate Limiting Middleware`: Implement rate limiting to control traffic flow.
+- `Obfuscation`: The obfuscation occurs during the HTTP request/response processing.
 ## Installation
 1. Clone the Repository:
 ```bash
@@ -39,6 +36,7 @@ Command-Line Options
 - `-workers`: Determine the number of workers. Is set to `0` by default.
 - `queue-size`: Detemine the buffer size for pending requests.
 - `timeout`: Timeout for requests in seconds. Is set to `30` seconds by default.
+- `obfuscate`: Traffic obfuscation mode: 0=None, 1=HttpHeaders, 2=DomainFronting, 3=CustomJitter.
 ### Examples
 - `Transparent Mode`:
 ```bash   
