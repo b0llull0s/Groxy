@@ -12,26 +12,30 @@ import (
 )
 
 type Proxy struct {
-	targetURL    *url.URL
-	tlsConfig    *tls.Config
-	customHeader string
-	workerPool   *WorkerPool
-	useWorkers   bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	timeout      time.Duration
+	targetURL       *url.URL
+	tlsConfig       *tls.Config
+	customHeader    string
+	workerPool      *WorkerPool
+	useWorkers      bool
+	ctx             context.Context
+	cancel          context.CancelFunc
+	timeout         time.Duration
+	obfuscator      *TrafficObfuscator
+	obfuscationMode ObfuscationMode
 }
 
-func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string) *Proxy {
+func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string, obfuscationMode ObfuscationMode) *Proxy {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Proxy{
-		targetURL:    targetURL,
-		tlsConfig:    tlsConfig,
-		customHeader: customHeader,
-		useWorkers:   false,
-		ctx:          ctx,
-		cancel:       cancel,
-		timeout:      30 * time.Second, // Default timeout
+		targetURL:       targetURL,
+		tlsConfig:       tlsConfig,
+		customHeader:    customHeader,
+		useWorkers:      false,
+		ctx:             ctx,
+		cancel:          cancel,
+		timeout:         30 * time.Second, // Default timeout
+		obfuscator:      NewTrafficObfuscator(obfuscationMode),
+		obfuscationMode: obfuscationMode,
 	}
 }
 
@@ -74,8 +78,8 @@ func (p *Proxy) createReverseProxy(targetURL *url.URL) *httputil.ReverseProxy {
 	
 	proxy.Transport = transport
 	
-	ModifyRequest(proxy, p.customHeader)
-	ModifyResponse(proxy)
+	ModifyRequest(proxy, p.customHeader, p.obfuscator)
+	ModifyResponse(proxy, p.obfuscator)
 	return proxy
 }
 

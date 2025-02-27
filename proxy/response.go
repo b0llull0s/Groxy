@@ -9,12 +9,22 @@ import (
 	"Groxy/logger" 
 )
 
-// Modifies incoming responses.
-func ModifyResponse(proxy *httputil.ReverseProxy) {
+func ModifyResponse(proxy *httputil.ReverseProxy, obfuscator *TrafficObfuscator) {
 	proxy.ModifyResponse = func(res *http.Response) error {
 		logger.LogResponse(res)
 
-		// Modify the response body
+		if obfuscator != nil && obfuscator.mode != NoObfuscation {
+			extractedData, err := obfuscator.ExtractFromResponse(res)
+			if err != nil {
+				logger.Error("Failed to extract data from obfuscated response: %v", err)
+			} else if len(extractedData) > 0 {
+				res.Body = io.NopCloser(bytes.NewReader(extractedData))
+				res.ContentLength = int64(len(extractedData))
+				res.Header.Set("Content-Length", fmt.Sprint(len(extractedData)))
+				return nil
+			}
+		}
+
 		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			return err

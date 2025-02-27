@@ -18,14 +18,15 @@ import (
 )
 
 var (
-	targetURLStr  string
-	transparent   bool
-	customHeader  string
-	enableHTTP    bool
-	enableHTTPS   bool
-	workers       int
-	queueSize     int
-	timeout       int
+	targetURLStr    string
+	transparent     bool
+	customHeader    string
+	enableHTTP      bool
+	enableHTTPS     bool
+	workers         int
+	queueSize       int
+	timeout         int
+	obfuscationMode int
 )
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 	flag.IntVar(&workers, "workers", 0, "Number of worker goroutines to use (0 disables worker pool)")
 	flag.IntVar(&queueSize, "queue-size", 100, "Size of the job queue for worker pool")
 	flag.IntVar(&timeout, "timeout", 30, "Timeout for requests in seconds")
+	flag.IntVar(&obfuscationMode, "obfuscate", 0, "Traffic obfuscation mode: 0=None, 1=HttpHeaders, 2=DomainFronting, 3=CustomJitter")
 	flag.Parse()
 
 	logger.Init()
@@ -80,8 +82,7 @@ func main() {
 		}
 	}
 
-	proxyHandler := proxy.NewProxy(targetURL, tlsConfig, customHeader)
-	
+	proxyHandler := proxy.NewProxy(targetURL, tlsConfig, customHeader, proxy.ObfuscationMode(obfuscationMode))	
 	proxyHandler.SetTimeout(time.Duration(timeout) * time.Second)
 	
 	if workers > 0 {

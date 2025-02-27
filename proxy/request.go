@@ -31,7 +31,7 @@ var (
 	rnd            = rand.New(rand.NewSource(time.Now().UnixNano()))
 )
 
-func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
+func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string, obfuscator *TrafficObfuscator) {
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
@@ -46,6 +46,15 @@ func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string) {
 				req.Header.Add(headerName, headerValue)
 			} else {
 				logger.LogCustomHeaderError(customHeader)
+			}
+		}
+
+		if obfuscator != nil && obfuscator.mode != NoObfuscation {
+			payload := []byte{}
+			
+			err := obfuscator.ApplyToRequest(req, payload)
+			if err != nil {
+				logger.Error("Failed to apply obfuscation to request: %v", err)
 			}
 		}
 
