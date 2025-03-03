@@ -153,7 +153,4 @@ func (p *Proxy) handleTransparentProxy(w http.ResponseWriter, r *http.Request) {
 
 func (p *Proxy) Shutdown() {
 	p.cancel()
-	if p.workerPool != nil {
-		p.StopWorkerPool()
-	}
 }

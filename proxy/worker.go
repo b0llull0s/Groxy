@@ -68,8 +68,12 @@ func (p *WorkerPool) Submit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *WorkerPool) Stop() {
-	p.cancel() 
-	close(p.jobQueue)
+	p.cancel()
+	select {
+	case <-p.ctx.Done():
+	default:
+		close(p.jobQueue)
+	} 
 	
 	p.wg.Wait()
 }
