@@ -64,6 +64,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	if enableRedirection && !enableHTTPS {
+		fmt.Println("Error: You must enable HTTPS (-https) when redirection (-redirect) is enabled")
+		flag.Usage()
+		os.Exit(1)
+	}
+
 	tlsConfig := tls.NewConfig("certs/server-cert.pem", "certs/server-key.pem")
 	tlsManager := tls.NewManager(tlsConfig)
 
