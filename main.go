@@ -27,6 +27,7 @@ var (
 	queueSize       int
 	timeout         int
 	obfuscationMode int
+	enableRedirection bool
 )
 
 func main() {
@@ -39,6 +40,7 @@ func main() {
 	flag.IntVar(&queueSize, "queue-size", 100, "Size of the job queue for worker pool")
 	flag.IntVar(&timeout, "timeout", 30, "Timeout for requests in seconds")
 	flag.IntVar(&obfuscationMode, "obfuscate", 0, "Traffic obfuscation mode: 0=None, 1=HttpHeaders, 2=DomainFronting, 3=CustomJitter")
+	flag.BoolVar(&enableRedirection, "redirect", false, "Enable HTTP to HTTPS redirection")
 	flag.Parse()
 
 	logger.Init()
@@ -98,6 +100,7 @@ func main() {
 		"8080",
 		"8443",
 	)
+	server.SetRedirection(enableRedirection)
 
 	if enableHTTP {
 		if err := server.StartHTTP(); err != nil {
