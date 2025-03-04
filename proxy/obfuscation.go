@@ -146,19 +146,25 @@ func (t *TrafficObfuscator) generateHMAC(data []byte) []byte {
 }
 
 func (t *TrafficObfuscator) verifyHMAC(data []byte, expectedHmac []byte) bool {
-	mac := hmac.New(sha256.New, t.hmacKey)
-	mac.Write(data)
-	calculated := mac.Sum(nil)
+    if len(expectedHmac) != sha256.Size {
+        logger.Debug("HMAC verification failed: incorrect length")
+        return false
+    }
 
-	if !hmac.Equal(calculated, expectedHmac) {
-		logger.Error("HMAC Verification Failed")
-		logger.Error("Calculated HMAC: %x", calculated)
-		logger.Error("Expected HMAC:   %x", expectedHmac)
-		logger.Error("Data Length: %d", len(data))
-		return false
-	}
+    mac := hmac.New(sha256.New, t.hmacKey)
+    mac.Write(data)
+    calculated := mac.Sum(nil)
 
-	return true
+    match := hmac.Equal(calculated, expectedHmac)
+
+    if !match {
+        logger.Debug("HMAC Verification Details:")
+        logger.Debug("Calculated HMAC: %x", calculated)
+        logger.Debug("Expected HMAC:   %x", expectedHmac)
+        logger.Debug("Data Length: %d", len(data))
+    }
+
+    return match
 }
 
 func (t *TrafficObfuscator) encryptData(data []byte, key []byte) ([]byte, error) {
