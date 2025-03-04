@@ -50,6 +50,12 @@ func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string, obfuscator
 		}
 
 		if obfuscator != nil {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Error("Panic in obfuscation: %v", r)
+				}
+			}()
+
 			err := obfuscator.ApplyToRequest(req)
 			if err != nil {
 				logger.Error("Failed to apply obfuscation to request: %v", err)
