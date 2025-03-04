@@ -54,14 +54,20 @@ func NewTrafficObfuscator() *TrafficObfuscator {
 }
 
 func (t *TrafficObfuscator) ApplyToRequest(req *http.Request) error {
+	if req.Body == nil {
+		req.Body = io.NopCloser(bytes.NewReader([]byte{}))
+	}
+
 	bodyBytes, err := io.ReadAll(req.Body)
 	if err != nil {
 		return err
 	}
 	req.Body.Close()
+
 	timestamp := make([]byte, 8)
 	binary.BigEndian.PutUint64(timestamp, uint64(time.Now().UnixNano()))
 	combinedData := append(timestamp, bodyBytes...)
+
 	encryptedBody, err := t.encryptData(combinedData, t.requestKey)
 	if err != nil {
 		return err
@@ -70,11 +76,13 @@ func (t *TrafficObfuscator) ApplyToRequest(req *http.Request) error {
 	hmac := t.generateHMAC(encryptedBody)
 	finalPayload := append(hmac, encryptedBody...)
 	jitteredPayload := t.addJitter(finalPayload)
+
 	newReq, err := http.NewRequest(req.Method, req.URL.String(), bytes.NewReader(jitteredPayload))
 	if err != nil {
 		return err
 	}
 
+	newReq.Host = req.Host
 	t.obfuscateHeaders(newReq)
 	*req = *newReq
 
