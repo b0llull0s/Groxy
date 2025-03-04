@@ -148,7 +148,17 @@ func (t *TrafficObfuscator) generateHMAC(data []byte) []byte {
 func (t *TrafficObfuscator) verifyHMAC(data []byte, expectedHmac []byte) bool {
 	mac := hmac.New(sha256.New, t.hmacKey)
 	mac.Write(data)
-	return hmac.Equal(mac.Sum(nil), expectedHmac)
+	calculated := mac.Sum(nil)
+
+	if !hmac.Equal(calculated, expectedHmac) {
+		logger.Error("HMAC Verification Failed")
+		logger.Error("Calculated HMAC: %x", calculated)
+		logger.Error("Expected HMAC:   %x", expectedHmac)
+		logger.Error("Data Length: %d", len(data))
+		return false
+	}
+
+	return true
 }
 
 func (t *TrafficObfuscator) encryptData(data []byte, key []byte) ([]byte, error) {
