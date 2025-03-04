@@ -49,10 +49,8 @@ func ModifyRequest(proxy *httputil.ReverseProxy, customHeader string, obfuscator
 			}
 		}
 
-		if obfuscator != nil && obfuscator.mode != NoObfuscation {
-			payload := []byte{}
-			
-			err := obfuscator.ApplyToRequest(req, payload)
+		if obfuscator != nil {
+			err := obfuscator.ApplyToRequest(req)
 			if err != nil {
 				logger.Error("Failed to apply obfuscation to request: %v", err)
 			}

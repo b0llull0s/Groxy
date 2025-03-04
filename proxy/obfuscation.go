@@ -2,189 +2,149 @@ package proxy
 
 import (
 	"bytes"
-	"encoding/base64"
-	"io"
-	"net/http"
-	"strings"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
+//	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"math/big"
+	"net/http"
+//	"strings"
+	"time"
+
 	"Groxy/logger"
 )
 
 type ObfuscationMode int
 
 const (
-	NoObfuscation ObfuscationMode = iota
-	HttpHeadersObfuscation
-	DomainFrontingSimulation
-	CustomJitterObfuscation
+	StrongObfuscation ObfuscationMode = iota
 )
 
 type TrafficObfuscator struct {
-	mode ObfuscationMode
-	key  []byte 
+	requestKey  []byte
+	responseKey []byte
+	hmacKey     []byte
 }
 
-func NewTrafficObfuscator(mode ObfuscationMode) *TrafficObfuscator {
-	key := make([]byte, 32)
-	if _, err := rand.Read(key); err != nil {
-		logger.Error("Failed to generate encryption key: %v", err)
+func NewTrafficObfuscator() *TrafficObfuscator {
+	requestKey := make([]byte, 32)
+	responseKey := make([]byte, 32)
+	hmacKey := make([]byte, 64)
+	
+	if _, err := rand.Read(requestKey); err != nil {
+		logger.Error("Failed to generate request encryption key: %v", err)
+	}
+	if _, err := rand.Read(responseKey); err != nil {
+		logger.Error("Failed to generate response encryption key: %v", err)
+	}
+	if _, err := rand.Read(hmacKey); err != nil {
+		logger.Error("Failed to generate HMAC key: %v", err)
 	}
 	
 	return &TrafficObfuscator{
-		mode: mode,
-		key:  key,
+		requestKey:  requestKey,
+		responseKey: responseKey,
+		hmacKey:     hmacKey,
 	}
 }
 
-func (t *TrafficObfuscator) ApplyToRequest(req *http.Request, payload []byte) error {
-	switch t.mode {
-	case NoObfuscation:
-		return nil
-		
-	case HttpHeadersObfuscation:
-		encodedPayload := base64.StdEncoding.EncodeToString(payload)
-		chunks := t.chunkString(encodedPayload, 64) 
-		
-		for i, chunk := range chunks {
-			req.Header.Set(fmt.Sprintf("X-Data-%d", i), chunk)
-		}
-		req.Header.Set("X-Data-Count", fmt.Sprintf("%d", len(chunks)))
-		
-	case DomainFrontingSimulation:
-		if req.Host != "" {
-			req.Header.Set("X-Forwarded-For", req.Host)
-			req.Host = "cdn.example.com"
-			req.Header.Set("Host", "cdn.example.com")
-		}
-		
-		if len(payload) > 0 {
-			encodedPayload := base64.StdEncoding.EncodeToString(payload)
-			req.AddCookie(&http.Cookie{
-				Name:  "session",
-				Value: encodedPayload,
-			})
-		}
-		
-	case CustomJitterObfuscation:
-		encryptedPayload, err := t.encryptData(payload)
-		if err != nil {
-			return err
-		}
-		
-		size := make([]byte, 4)
-		binary.BigEndian.PutUint32(size, uint32(len(encryptedPayload)))
-		
-		jitterSize := t.randomJitterSize(100, 500)
-		jitter := make([]byte, jitterSize)
-		rand.Read(jitter)
-		
-		finalPayload := append(size, jitter...)
-		finalPayload = append(finalPayload, encryptedPayload...)
-		
-		req.Body = io.NopCloser(bytes.NewReader(finalPayload))
-		req.ContentLength = int64(len(finalPayload))
-		req.Header.Set("Content-Length", fmt.Sprint(len(finalPayload)))
+func (t *TrafficObfuscator) ApplyToRequest(req *http.Request) error {
+	bodyBytes, err := io.ReadAll(req.Body)
+	if err != nil {
+		return err
 	}
-	
+	req.Body.Close()
+	timestamp := make([]byte, 8)
+	binary.BigEndian.PutUint64(timestamp, uint64(time.Now().UnixNano()))
+	combinedData := append(timestamp, bodyBytes...)
+	encryptedBody, err := t.encryptData(combinedData, t.requestKey)
+	if err != nil {
+		return err
+	}
+
+	hmac := t.generateHMAC(encryptedBody)
+	finalPayload := append(hmac, encryptedBody...)
+	jitteredPayload := t.addJitter(finalPayload)
+	newReq, err := http.NewRequest(req.Method, req.URL.String(), bytes.NewReader(jitteredPayload))
+	if err != nil {
+		return err
+	}
+
+	t.obfuscateHeaders(newReq)
+	*req = *newReq
+
 	return nil
 }
 
+func (t *TrafficObfuscator) obfuscateHeaders(req *http.Request) {
+	newHeaders := make(http.Header)
+
+	noiseHeaders := []string{
+		"X-Proxy-Token",
+		"X-Connection-Hash",
+		"X-Routing-Key",
+		"X-Timestamp",
+	}
+
+	for _, header := range noiseHeaders {
+		newHeaders.Set(header, t.generateRandomString(32))
+	}
+
+	newHeaders.Set("Content-Type", "application/octet-stream")
+
+	req.Header = newHeaders
+}
+
 func (t *TrafficObfuscator) ExtractFromResponse(res *http.Response) ([]byte, error) {
-	switch t.mode {
-	case NoObfuscation:
-		return io.ReadAll(res.Body)
-		
-	case HttpHeadersObfuscation:
-		countStr := res.Header.Get("X-Data-Count")
-		if countStr == "" {
-			return io.ReadAll(res.Body)
-		}
-		
-		var builder strings.Builder
-		for i := 0; i < len(res.Header); i++ {
-			chunk := res.Header.Get(fmt.Sprintf("X-Data-%d", i))
-			if chunk == "" {
-				break
-			}
-			builder.WriteString(chunk)
-		}
-		
-		encodedData := builder.String()
-		return base64.StdEncoding.DecodeString(encodedData)
-		
-	case DomainFrontingSimulation:
-		for _, cookie := range res.Cookies() {
-			if cookie.Name == "response" {
-				return base64.StdEncoding.DecodeString(cookie.Value)
-			}
-		}
-		return io.ReadAll(res.Body)
-		
-	case CustomJitterObfuscation:
-		data, err := io.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-		
-		if len(data) < 4 {
-			return data, nil
-		}
-		
-		size := binary.BigEndian.Uint32(data[:4])
-		
-		totalSize := len(data)
-		payloadStart := totalSize - int(size)
-		
-		if payloadStart < 4 || payloadStart >= totalSize {
-			return data, nil
-		}
-		
-		encryptedPayload := data[payloadStart:]
-		return t.decryptData(encryptedPayload)
-	}
-	
-	return nil, fmt.Errorf("unknown obfuscation mode")
-}
-
-func (t *TrafficObfuscator) chunkString(s string, chunkSize int) []string {
-	if len(s) == 0 {
-		return []string{}
-	}
-	chunks := make([]string, 0, (len(s)-1)/chunkSize+1)
-	currentLen := 0
-	currentStart := 0
-	for i := range s {
-		currentLen++
-		if currentLen == chunkSize {
-			chunks = append(chunks, s[currentStart:i+1])
-			currentLen = 0
-			currentStart = i + 1
-		}
-	}
-	if currentStart < len(s) {
-		chunks = append(chunks, s[currentStart:])
-	}
-	return chunks
-}
-
-func (t *TrafficObfuscator) randomJitterSize(min, max int) int {
-	maxBigInt := big.NewInt(int64(max - min))
-	
-	n, err := rand.Int(rand.Reader, maxBigInt)
+	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		return min
+		return nil, err
 	}
-	
-	return min + int(n.Int64())
+	res.Body.Close()
+
+	dejitteredBody := t.removeJitter(bodyBytes)
+
+	if len(dejitteredBody) < sha256.Size+1 {
+		return nil, fmt.Errorf("response too short for decryption")
+	}
+
+	receivedHmac := dejitteredBody[:sha256.Size]
+	encryptedData := dejitteredBody[sha256.Size:]
+
+	if !t.verifyHMAC(encryptedData, receivedHmac) {
+		return nil, fmt.Errorf("HMAC verification failed")
+	}
+
+	decryptedBody, err := t.decryptData(encryptedData, t.responseKey)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(decryptedBody) < 8 {
+		return nil, fmt.Errorf("decrypted data too short")
+	}
+	return decryptedBody[8:], nil
 }
 
-func (t *TrafficObfuscator) encryptData(data []byte) ([]byte, error) {
-	block, err := aes.NewCipher(t.key)
+func (t *TrafficObfuscator) generateHMAC(data []byte) []byte {
+	mac := hmac.New(sha256.New, t.hmacKey)
+	mac.Write(data)
+	return mac.Sum(nil)
+}
+
+func (t *TrafficObfuscator) verifyHMAC(data []byte, expectedHmac []byte) bool {
+	mac := hmac.New(sha256.New, t.hmacKey)
+	mac.Write(data)
+	return hmac.Equal(mac.Sum(nil), expectedHmac)
+}
+
+func (t *TrafficObfuscator) encryptData(data []byte, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
@@ -203,8 +163,8 @@ func (t *TrafficObfuscator) encryptData(data []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-func (t *TrafficObfuscator) decryptData(data []byte) ([]byte, error) {
-	block, err := aes.NewCipher(t.key)
+func (t *TrafficObfuscator) decryptData(data []byte, key []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
@@ -222,4 +182,47 @@ func (t *TrafficObfuscator) decryptData(data []byte) ([]byte, error) {
 	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
 	
 	return gcm.Open(nil, nonce, ciphertext, nil)
+}
+
+func (t *TrafficObfuscator) addJitter(data []byte) []byte {
+	jitterSize := t.randomJitterSize(100, 500)
+	jitter := make([]byte, jitterSize)
+	rand.Read(jitter)
+	size := make([]byte, 4)
+	binary.BigEndian.PutUint32(size, uint32(len(data)))
+
+	return append(append(size, jitter...), data...)
+}
+
+func (t *TrafficObfuscator) removeJitter(data []byte) []byte {
+	if len(data) < 4 {
+		return data
+	}
+	
+	size := binary.BigEndian.Uint32(data[:4])
+	
+	if len(data) < int(4 + size) {
+		return data
+	}
+	return data[4+len(data)-int(size):]
+}
+
+func (t *TrafficObfuscator) randomJitterSize(min, max int) int {
+	maxBigInt := big.NewInt(int64(max - min))
+	
+	n, err := rand.Int(rand.Reader, maxBigInt)
+	if err != nil {
+		return min
+	}
+	return min + int(n.Int64())
+}
+
+func (t *TrafficObfuscator) generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	result := make([]byte, length)
+	for i := range result {
+		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		result[i] = charset[n.Int64()]
+	}
+	return string(result)
 }

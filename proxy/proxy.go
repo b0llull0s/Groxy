@@ -21,11 +21,15 @@ type Proxy struct {
 	cancel          context.CancelFunc
 	timeout         time.Duration
 	obfuscator      *TrafficObfuscator
-	obfuscationMode ObfuscationMode
+	enableObfuscation bool
 }
 
-func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string, obfuscationMode ObfuscationMode) *Proxy {
+func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string, enableObfuscation bool) *Proxy {
 	ctx, cancel := context.WithCancel(context.Background())
+	var obfuscator *TrafficObfuscator
+	if enableObfuscation {
+		obfuscator = NewTrafficObfuscator()
+	}
 	return &Proxy{
 		targetURL:       targetURL,
 		tlsConfig:       tlsConfig,
@@ -33,9 +37,9 @@ func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string, ob
 		useWorkers:      false,
 		ctx:             ctx,
 		cancel:          cancel,
-		timeout:         30 * time.Second, // Default timeout
-		obfuscator:      NewTrafficObfuscator(obfuscationMode),
-		obfuscationMode: obfuscationMode,
+		timeout:         30 * time.Second,
+		obfuscator:      obfuscator,
+		enableObfuscation: enableObfuscation,
 	}
 }
 
@@ -111,7 +115,6 @@ func (p *Proxy) Handler() http.Handler {
 		case <-doneCh:
 		case <-ctx.Done():
 			logger.LogRequestTimeout(r)
-			// Note: cannot write to response here as the goroutine might have already written to it
 		}
 	})
 }

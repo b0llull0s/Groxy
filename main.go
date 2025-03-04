@@ -26,7 +26,7 @@ var (
 	workers         int
 	queueSize       int
 	timeout         int
-	obfuscationMode int
+	enableObfuscation bool
 	enableRedirection bool
 )
 
@@ -39,7 +39,7 @@ func main() {
 	flag.IntVar(&workers, "workers", 0, "Number of worker goroutines to use (0 disables worker pool)")
 	flag.IntVar(&queueSize, "queue-size", 100, "Size of the job queue for worker pool")
 	flag.IntVar(&timeout, "timeout", 30, "Timeout for requests in seconds")
-	flag.IntVar(&obfuscationMode, "obfuscate", 0, "Traffic obfuscation mode: 0=None, 1=HttpHeaders, 2=DomainFronting, 3=CustomJitter")
+	flag.BoolVar(&enableObfuscation, "obfuscate", false, "Enable strong traffic obfuscation")
 	flag.BoolVar(&enableRedirection, "redirect", false, "Enable HTTP to HTTPS redirection")
 	flag.Parse()
 
@@ -90,7 +90,7 @@ func main() {
 		}
 	}
 
-	proxyHandler := proxy.NewProxy(targetURL, tlsConfig, customHeader, proxy.ObfuscationMode(obfuscationMode))	
+	proxyHandler := proxy.NewProxy(targetURL, tlsConfig, customHeader, enableObfuscation)	
 	proxyHandler.SetTimeout(time.Duration(timeout) * time.Second)
 	
 	if workers > 0 {
