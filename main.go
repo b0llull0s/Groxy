@@ -14,7 +14,7 @@ import (
 	"Groxy/proxy"
 	"Groxy/servers"
 	"Groxy/tls"
-//	"Groxy/auth"
+	"Groxy/auth"
 	cryptotls "crypto/tls"
 )
 
@@ -71,7 +71,7 @@ func main() {
 		os.Exit(1)
 	}
 
-//	authModule := auth.InitAuthFromFlags()
+	authModule := auth.InitAuthFromFlags()
 	tlsConfig := tls.NewConfig("certs/server-cert.pem", "certs/server-key.pem")
 	tlsManager := tls.NewManager(tlsConfig)
 
@@ -93,7 +93,7 @@ func main() {
 	}
 
 	proxyHandler := proxy.NewProxy(targetURL, tlsConfig, customHeader, enableObfuscation)
-//	proxyHandler.SetAuthModule(authModule)	
+	proxyHandler.SetAuthModule(authModule)	
 	proxyHandler.SetTimeout(time.Duration(timeout) * time.Second)
 	
 	if workers > 0 {
