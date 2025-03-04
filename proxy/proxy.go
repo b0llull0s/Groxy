@@ -3,6 +3,7 @@ package proxy
 import (
 	"Groxy/logger"
 	"Groxy/tls"
+//	"Groxy/auth"
 	"context"
 	"fmt"
 	"net/http"
@@ -22,6 +23,7 @@ type Proxy struct {
 	timeout         time.Duration
 	obfuscator      *TrafficObfuscator
 	enableObfuscation bool
+//	AuthModule		*auth.AuthModule
 }
 
 func NewProxy(targetURL *url.URL, tlsConfig *tls.Config, customHeader string, enableObfuscation bool) *Proxy {
@@ -87,8 +89,18 @@ func (p *Proxy) createReverseProxy(targetURL *url.URL) *httputil.ReverseProxy {
 	return proxy
 }
 
+// func (p *Proxy) SetAuthModule(authModule *auth.AuthModule) {
+// 	p.authModule = authModule
+// }
+
 func (p *Proxy) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		
+		// if p.authModule != nil && !p.authModule.Authenticate(r) {
+		// 	w.WriteHeader(http.StatusUnauthorized)
+		// 	w.Write([]byte("Unauthorized"))
+		// 	return
+		// }
 		ctx, cancel := context.WithTimeout(p.ctx, p.timeout)
 		defer cancel()
 		
