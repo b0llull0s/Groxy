@@ -94,51 +94,56 @@ func (p *Proxy) SetAuthModule(AuthModule *auth.AuthModule) {
 }
 
 func (p *Proxy) Handler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		
-		if p.AuthModule != nil && !p.AuthModule.Authenticate(r) {
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorized"))
-			return
-		}
-		ctx, cancel := context.WithTimeout(p.ctx, p.timeout)
-		defer cancel()
-		
-		r = r.WithContext(ctx)
-		
-		if p.useWorkers {
-			p.workerPool.Submit(w, r)
-			return
-		}
-		
-		doneCh := make(chan struct{})
-		
-		go func() {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        
+        if p.AuthModule != nil && !p.AuthModule.Authenticate(r) {
+            w.WriteHeader(http.StatusUnauthorized)
+            w.Write([]byte("Unauthorized"))
+            return
+        }
+        ctx, cancel := context.WithTimeout(p.ctx, p.timeout)
+        defer cancel()
+        
+        r = r.WithContext(ctx)
+        
+        if p.useWorkers {
+            p.workerPool.Submit(w, r)
+            return
+        }
+        
+        doneCh := make(chan struct{})
+        
+        go func() {
 			if p.targetURL == nil {
-				p.handleTransparentProxy(w, r)
-			} else {
-				proxy := p.createReverseProxy(p.targetURL)
-				proxy.ServeHTTP(w, r)
-			}
-			close(doneCh)
-		}()
-		
-		select {
-		case <-doneCh:
-		case <-ctx.Done():
-			logger.LogRequestTimeout(r)
-		}
-	})
+                p.handleTransparentProxy(w, r)
+            } else {
+                proxy := p.createReverseProxy(p.targetURL)
+                proxy.ServeHTTP(w, r)
+            }
+            close(doneCh)
+        }()
+        
+        select {
+        case <-doneCh:
+        case <-ctx.Done():
+            logger.LogRequestTimeout(r)
+        }
+    })
 }
 
 func (p *Proxy) handleTransparentProxy(w http.ResponseWriter, r *http.Request) {
+    fmt.Println("Transparent proxy handler called for host:", r.Host)
+	logger.LogRequest(r)
+
 	if r.Host == "localhost:8080" || r.Host == "localhost:8443" {
+		logger.Error("Attempt to proxy to self: %s", r.Host)
 		http.Error(w, "Cannot proxy to self", http.StatusBadRequest)
 		return
 	}
 
 	select {
 	case <-r.Context().Done():
+		logger.LogRequestTimeout(r)
 		http.Error(w, "Request cancelled or timed out", http.StatusGatewayTimeout)
 		return
 	default:
@@ -149,6 +154,8 @@ func (p *Proxy) handleTransparentProxy(w http.ResponseWriter, r *http.Request) {
 		logger.LogTransparentProxyHandlerUnableToDetermineDestinationHost(w)
 		return
 	}
+
+	logger.Info("Proxying request to: %s", destinationHost)
 
 	scheme := "http"
 	if r.TLS != nil {
@@ -161,6 +168,8 @@ func (p *Proxy) handleTransparentProxy(w http.ResponseWriter, r *http.Request) {
 		Path:     r.URL.Path,
 		RawQuery: r.URL.RawQuery,
 	}
+
+	logger.Info("Destination URL: %s", destinationURL.String())
 
 	proxy := p.createReverseProxy(destinationURL)
 	proxy.ServeHTTP(w, r)
