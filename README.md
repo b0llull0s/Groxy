@@ -1,6 +1,6 @@
 # Groxy
-Groxy is a powerful and customizable `HTTP/HTTPS` proxy written in `Go`. It is designed to handle both transparent and target-specific proxying, with support for various authentication methods, custom headers, `User-Agent` rotation, `TLS` certificate management, dynamic certificate rotation traffic obfuscation, and worker pools for handling concurrent requests.
-Groxy is designed to be flexible, allowing you to configure it for different use cases, such as load balancing, traffic monitoring, or secure tunneling.
+- Groxy is a powerful and customizable `HTTP/HTTPS` proxy written in `Go`. It is designed to handle both transparent and target-specific proxying, with support for various authentication methods, custom headers, `User-Agent` rotation, `TLS` certificate management, dynamic certificate rotation traffic obfuscation, and worker pools for handling concurrent requests.
+- Groxy is designed to be flexible, allowing you to configure it for different use cases, such as load balancing, traffic monitoring, or secure tunneling.
 ## Features
 - `Transparent Proxy Mode`: Automatically forwards requests to the destination host without requiring explicit configuration.
 - `Target-Specific Proxy Mode`: Directs traffic to a specific target URL.
