@@ -7,7 +7,7 @@
 - `Custom Headers`: Add custom headers to outgoing requests.
 - `TLS Support`: Built-in support for `HTTPS` with dynamic certificate generation and rotation.
 - `Request/Response Modification`: Modify incoming responses and outgoing requests on the fly.
-- `Logging`: Comprehensive logging for both requests and responses.
+- `Logging`: Provides detailed logging for requests, responses, and server events, with support for different log levels (`INFO`, `WARNING`, `ERROR`, `DEBUG`).
 - `Certificate Management`: Automatically generate and rotate TLS certificates for secure communication.
 - `User-Agent Rotation`: Rotate `User-Agent` strings to mimic different browsers or devices.
 - `HTTP/HTTPS Proxy`: Supports both `HTTP` and `HTTPS` traffic with automatic redirection from `HTTP` to `HTTPS`.
@@ -65,8 +65,19 @@ Command-Line Options
 - You can replace these files with your own certificates if needed.
 - The certificates provided in the repository are for testing purposes.
 ### Logging
-- Logs are stored in the `logs` directory.
-- You can customize the logging behavior by modifying the `logger/log.go` file.
+- Example log entries:
+```
+[INFO] Starting HTTP server on port 8080
+[INFO] Request: GET http://example.com
+[DEBUG] Header: User-Agent: curl/7.68.0
+[INFO] Response: 200 OK
+[ERROR] Server error: connection refused
+```
+- You can use the following logging functions in your code:
+   - `logger.Info(format string, v ...interface{})`: Logs informational messages.
+   - `logger.Warning(format string, v ...interface{})`: Logs warning messages.
+   - `logger.Error(format string, v ...interface{})`: Logs error messages.
+   - `logger.Debug(format string, v ...interface{})`: Logs debug messages.
 ## Code Structure
 - `proxy/`: Contains the core proxy logic, including request/response modification and transparent/target-specific handling.
 - `tls/`: Manages `TLS` certificate generation, rotation, and configuration.
